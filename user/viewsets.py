@@ -14,7 +14,6 @@ from django.contrib.auth import authenticate, login, logout
 from django.http import JsonResponse
 
 
-
 class CustomUserViewSet(viewsets.ModelViewSet):
     queryset = CustomUser.objects.all()
     serializer_class = CustomUserSerializer
@@ -48,3 +47,15 @@ class CustomUserViewSet(viewsets.ModelViewSet):
         """Gets the authenticated user."""
         serializer = CustomUserSerializer(request.user)
         return Response(serializer.data)
+    
+    # Signup action
+    @action(detail=False, methods=["post"], permission_classes=[AllowAny])
+    def signup(self, request):
+        """Creates a new user."""
+        serializer = CustomUserSerializer(data=request.data)
+                
+        if serializer.is_valid():
+            print("Validated data:", serializer.validated_data)
+            serializer.save()  # Save the new user
+            return Response({"message": "User created successfully!"}, status=201)
+        return Response(serializer.errors, status=400)
