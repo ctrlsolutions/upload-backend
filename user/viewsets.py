@@ -1,8 +1,10 @@
 from rest_framework import viewsets
 from rest_framework.permissions import AllowAny
+from rest_framework.authentication import SessionAuthentication
+
 from .models import CustomUser
 
-from .serializers import CustomUserSerializer
+from .serializers import CustomUserSerializer, LoginSerializer
 
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
@@ -18,6 +20,7 @@ from django.http import JsonResponse
 class CustomUserViewSet(viewsets.ModelViewSet):
     queryset = CustomUser.objects.all()
     serializer_class = CustomUserSerializer
+    authenticationClasses = [SessionAuthentication]
     permission_classes = [AllowAny]
 
     @method_decorator(ensure_csrf_cookie)
@@ -27,16 +30,25 @@ class CustomUserViewSet(viewsets.ModelViewSet):
     
     @action(detail=False, methods=["post"], permission_classes=[AllowAny])
     def login(self, request):
-        """Logs in a user and starts a session."""
-        email = request.data.get("email")
-        password = request.data.get("password")
+        serializer = LoginSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
 
-        user = authenticate(request, username=email, password=password)
-        if user:
+        email = serializer.validated_data["email"]
+        password = serializer.validated_data["password"]
+        print(email)
+        print(password)
+
+        try:
+            user = CustomUser.objects.get(email=email)
+        except CustomUser.DoesNotExist:
+            user = None
+        print(user)
+        if user and user.check_password(password):
             login(request, user)
-            return Response({"message": "Login successful!"})
-        return Response({"error": "Invalid credentials"}, status=401)
-    
+            return Response({"message": "Login successful", "user_id": user.user_id})
+        else:
+            return Response({"error": "Invalid credentials"})
+        
     @action(detail=False, methods=["post"], permission_classes=[IsAuthenticated])
     def logout(self, request):
         """Logs out a user and destroys the session."""
