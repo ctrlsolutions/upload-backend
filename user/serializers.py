@@ -2,16 +2,16 @@ from rest_framework import serializers
 from .models import CustomUser
 
 class CustomUserSerializer(serializers.ModelSerializer):
-    password1 =serializers.CharField(write_only=True)
+    password =serializers.CharField(write_only=True)
     password2 =serializers.CharField(write_only=True) 
 
     class Meta:
         model = CustomUser
-        fields = ['email', 'password1', 'password2',  'first_name', 'middle_name', 'last_name', 'sex', 'birthdate']
+        fields = ['email', 'password', 'password2',  'first_name', 'middle_name', 'last_name', 'sex', 'birthdate']
     
     def validate(self, data):
         # Check if passwords match
-        if data['password1'] != data['password2']:
+        if data['password'] != data['password2']:
             raise serializers.ValidationError({"password": "Passwords do not match."})
         return data
     
@@ -24,7 +24,6 @@ class CustomUserSerializer(serializers.ModelSerializer):
             sex=validated_data['sex'],
             birthdate=validated_data['birthdate']
         )
-        user.set_password(validated_data['password1'])
-        user.set_password(validated_data['password2'])
+        user.set_password(validated_data['password'])
         user.save()
         return user

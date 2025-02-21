@@ -52,10 +52,12 @@ class CustomUserViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=["post"], permission_classes=[AllowAny])
     def signup(self, request):
         """Creates a new user."""
+        print("Request data:", request.data)  # Debugging
         serializer = CustomUserSerializer(data=request.data)
                 
         if serializer.is_valid():
             print("Validated data:", serializer.validated_data)
             serializer.save()  # Save the new user
             return Response({"message": "User created successfully!"}, status=201)
+        print("Errors:", serializer.errors)  # Debugging
         return Response(serializer.errors, status=400)
