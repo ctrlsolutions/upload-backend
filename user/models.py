@@ -65,27 +65,24 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['first_name', 'last_name']
 
+    groups = models.ManyToManyField(
+        "auth.Group",
+        related_name="customuser_set",
+        blank=True
+    )
+    user_permissions = models.ManyToManyField(
+        "auth.Permission",
+        related_name="customuser_set",
+        blank=True
+    )
+
     class Meta:
         verbose_name = 'User'
         verbose_name_plural = 'Users'
 
-    def is_faculty(self):
-        return self.role == 'FA'
-    
-    def is_researcher(self):
-        return self.role == 'RE'
-    
-    def is_clerk(self):
-        return self.role == 'CL'
-    
-    def is_dep_head(self):
-        return self.role == 'DH'
-    
-    def is_col_dean(self):
-        return self.role == 'CD'
-    
-    def is_chancellor(self):
-        return self.role == 'CH'
+    def has_role(self, role_code):
+        return self.role == role_code
+
 
     def __str__(self):
         return self.email
