@@ -110,6 +110,20 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+AUTHENTICATION_BACKENDS = (
+    'oauth2_provider.backends.OAuth2Backend',
+    'django.contrib.auth.backends.ModelBackend',
+)
+
+OAUTH2_PROVIDER = {
+    "ACCESS_TOKEN_EXPIRE_SECONDS": 3600,
+}
+
+REST_FRAMEWORK = {
+    "DEFAULT_PERMISSION_CLASSES": (
+        "rest_framework.permissions.IsAuthenticated",
+    ),
+}
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
