@@ -41,3 +41,8 @@ class LogInSerializer(serializers.Serializer):
         # Save authenticated user for later use
         data["user"] = user
         return data
+    
+class UserProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CustomUser
+        fields = ['first_name', 'middle_name', 'last_name', 'email', 'role']
