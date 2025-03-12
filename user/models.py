@@ -6,9 +6,7 @@ class CustomUserManager(BaseUserManager):
         if not email:
             raise ValueError('The user must enter a valid email.')
         email = self.normalize_email(email)
-        user_id = email.split('@')[0]
-        kwargs.setdefault('user_id', user_id)
-        user = self.model(user_id=user_id, email=email, **kwargs)
+        user = self.model(email=email, **kwargs)
         user.set_password(password)
         user.save()
         return user
