@@ -1,8 +1,9 @@
 from rest_framework import viewsets
 from rest_framework.permissions import AllowAny
+from rest_framework.authtoken.models import Token
 from .models import CustomUser
 
-from .serializers import SignUpSerializer, LogInSerializer
+from .serializers import SignUpSerializer, LogInSerializer, UserProfileSerializer
 
 import requests
 
@@ -29,7 +30,7 @@ class AuthViewSet(viewsets.ModelViewSet):
         """Logs in a user and starts a session."""
         email = request.data.get("email")
         password = request.data.get("password")
-        user = CustomUser.objects.filter(email=email).first()
+        user = CustomUser.objects.get(email=email)
         print(user)
         print(f"Raw Password Check: {user.check_password(password)}")
         if user and user.check_password(password):
@@ -37,6 +38,8 @@ class AuthViewSet(viewsets.ModelViewSet):
         # print(email, password, user)
         # if user:
             login(request, user)
+            # token, created = Token.objects.get_or_create(user=user)
+            print("LOGIN", request.user, request.user.is_authenticated)
             return Response({"message": "Login successful!"})
         return Response({"error": "Invalid credentials"}, status=401)
     
@@ -135,3 +138,16 @@ class GoogleAuthViewSet(viewsets.ModelViewSet):
             },
             status=status.HTTP_200_OK,
         )
+    
+class DashboardViewSet(viewsets.ModelViewSet):
+    @action(detail=False, methods=["get"], permission_classes=[IsAuthenticated])
+    def get_profile_info(self, request):
+        print(f"User: {request.user}, Authenticated: {request.user.is_authenticated}")
+        
+        if not request.user.is_authenticated:
+            return Response({"error": "User not authenticated"}, status=403)
+
+        return Response({
+            "first_name": request.user.first_name,
+            "email": request.user.email,
+        })
