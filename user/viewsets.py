@@ -1,8 +1,9 @@
 from rest_framework import viewsets
 from rest_framework.permissions import AllowAny
+from rest_framework.authtoken.models import Token
 from .models import CustomUser
 
-from .serializers import AuthSerializer
+from .serializers import SignUpSerializer, LogInSerializer, UserProfileSerializer
 
 import requests
 
@@ -18,8 +19,6 @@ from django.http import JsonResponse
 
 class AuthViewSet(viewsets.ModelViewSet):
     queryset = CustomUser.objects.all()
-    serializer_class = AuthSerializer
-    permission_classes = [AllowAny]
 
     @method_decorator(ensure_csrf_cookie)
     @action(detail=False, methods=['get'], permission_classes=[AllowAny])
@@ -31,10 +30,16 @@ class AuthViewSet(viewsets.ModelViewSet):
         """Logs in a user and starts a session."""
         email = request.data.get("email")
         password = request.data.get("password")
-
-        user = authenticate(request, username=email, password=password)
-        if user:
+        user = CustomUser.objects.get(email=email)
+        print(user)
+        print(f"Raw Password Check: {user.check_password(password)}")
+        if user and user.check_password(password):
+        # user = authenticate(request, email=email, password=password)
+        # print(email, password, user)
+        # if user:
             login(request, user)
+            # token, created = Token.objects.get_or_create(user=user)
+            print("LOGIN", request.user, request.user.is_authenticated)
             return Response({"message": "Login successful!"})
         return Response({"error": "Invalid credentials"}, status=401)
     
@@ -47,15 +52,13 @@ class AuthViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=["get"], permission_classes=[IsAuthenticated])
     def user(self, request):
         """Gets the authenticated user."""
-        serializer = CustomUserSerializer(request.user)
-        return Response(serializer.data)
-    
+        pass    
     # Signup action
     @action(detail=False, methods=["post"], permission_classes=[AllowAny])
     def signup(self, request):
         """Creates a new user."""
         print("Request data:", request.data)  # Debugging
-        serializer = AuthSerializer(data=request.data)
+        serializer = SignUpSerializer(data=request.data)
                 
         if serializer.is_valid():
             print("Validated data:", serializer.validated_data)
@@ -98,6 +101,10 @@ class GoogleAuthViewSet(viewsets.ModelViewSet):
         password = extra_info.get("password")
 
         print("BACKEND ", extra_info, email, first_name)
+
+        if CustomUser.objects.filter(email=email).exists():
+            return Response({"error": "Email is already registered"}, status=status.HTTP_400_BAD_REQUEST)
+
         user, created = CustomUser.objects.get_or_create(
             email=email,
             defaults={
@@ -131,3 +138,16 @@ class GoogleAuthViewSet(viewsets.ModelViewSet):
             },
             status=status.HTTP_200_OK,
         )
+    
+class DashboardViewSet(viewsets.ModelViewSet):
+    @action(detail=False, methods=["get"], permission_classes=[IsAuthenticated])
+    def get_profile_info(self, request):
+        print(f"User: {request.user}, Authenticated: {request.user.is_authenticated}")
+        
+        if not request.user.is_authenticated:
+            return Response({"error": "User not authenticated"}, status=403)
+
+        return Response({
+            "first_name": request.user.first_name,
+            "email": request.user.email,
+        })

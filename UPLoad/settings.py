@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'corsheaders',
+    'rest_framework.authtoken',
 
     'user',
 ]
@@ -110,21 +111,23 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-AUTHENTICATION_BACKENDS = (
-    'oauth2_provider.backends.OAuth2Backend',
+AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
-)
-
-OAUTH2_PROVIDER = {
-    "ACCESS_TOKEN_EXPIRE_SECONDS": 3600,
-}
+]
 
 REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": (
         "rest_framework.permissions.IsAuthenticated",
     ),
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "rest_framework.authentication.TokenAuthentication",
+    ),
 }
 
+CORS_ALLOW_CREDENTIALS = True  # Allow cookies in requests
+SESSION_COOKIE_SECURE = False  # True in production with HTTPS
+SESSION_COOKIE_SAMESITE = "None"  # Required for cross-origin session sharing
+SESSION_COOKIE_HTTPONLY = False
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
 
