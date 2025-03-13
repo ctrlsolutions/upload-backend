@@ -28,6 +28,7 @@ DEBUG = config('DEBUG', default=False, cast=bool)
 
 ALLOWED_HOSTS = []
 
+AUTH_USER_MODEL = 'user.CustomUser'
 
 # Application definition
 
@@ -112,6 +113,7 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 AUTHENTICATION_BACKENDS = [
+    'user.authentication.EmailBackend',
     'django.contrib.auth.backends.ModelBackend',
 ]
 
