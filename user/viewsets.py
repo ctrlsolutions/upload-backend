@@ -27,21 +27,12 @@ class AuthViewSet(viewsets.ModelViewSet):
     
     @action(detail=False, methods=["post"], permission_classes=[AllowAny])
     def login(self, request):
-        """Logs in a user and starts a session."""
-        email = request.data.get("email")
-        password = request.data.get("password")
-        user = CustomUser.objects.get(email=email)
-        print(user)
-        print(f"Raw Password Check: {user.check_password(password)}")
-        if user and user.check_password(password):
-        # user = authenticate(request, email=email, password=password)
-        # print(email, password, user)
-        # if user:
+        serializer = LogInSerializer(data=request.data)
+        if serializer.is_valid():
+            user = serializer.validated_data["user"]
             login(request, user)
-            # token, created = Token.objects.get_or_create(user=user)
-            print("LOGIN", request.user, request.user.is_authenticated)
             return Response({"message": "Login successful!"})
-        return Response({"error": "Invalid credentials"}, status=401)
+        return Response(serializer.errors, status=400)
     
     @action(detail=False, methods=["post"], permission_classes=[IsAuthenticated])
     def logout(self, request):
