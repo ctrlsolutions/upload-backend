@@ -17,6 +17,8 @@ from django.utils.decorators import method_decorator
 from django.contrib.auth import authenticate, login, logout
 from django.http import JsonResponse
 
+from rest_framework.decorators import api_view
+
 class AuthViewSet(viewsets.ModelViewSet):
     queryset = CustomUser.objects.all()
 
@@ -30,13 +32,24 @@ class AuthViewSet(viewsets.ModelViewSet):
         serializer = LogInSerializer(data=request.data)
         if serializer.is_valid():
             user = serializer.validated_data["user"]
+            print(user, "userid", serializer.validated_data["user_id"])
+            user_id = serializer.validated_data["user_id"]
             login(request, user)
-            return Response({"message": "Login successful!"})
+
+            token, created = Token.objects.get_or_create(user=user)
+
+            return Response({
+                "message": "Login successful!",
+                "token": token.key,
+                "user_id": user_id
+            })
+        
         return Response(serializer.errors, status=400)
     
     @action(detail=False, methods=["post"], permission_classes=[IsAuthenticated])
     def logout(self, request):
         """Logs out a user and destroys the session."""
+        request.auth.delete()  # Delete the user's token
         logout(request)
         return Response({"message": "Logged out successfully!"})
     
