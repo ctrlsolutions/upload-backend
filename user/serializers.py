@@ -13,7 +13,6 @@ class SignUpSerializer(serializers.ModelSerializer):
         fields = ['email', 'password', 'password2',  'first_name', 'middle_name', 'last_name', 'sex', 'birthdate']
     
     def validate(self, data):
-        # Check if passwords match
         if data['password'] != data['password2']:
             raise serializers.ValidationError({"password": "Passwords do not match."})
         return data

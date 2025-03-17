@@ -19,17 +19,6 @@ from django.http import JsonResponse
 
 from rest_framework.decorators import api_view
 
-# class UserProfileViewSet(viewsets.ViewSet):
-#     """Handles retrieving the authenticated user's profile"""
-#     permission_classes = [IsAuthenticated]  # Requires authentication
-
-#     @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
-#     def user_list(self, request):
-#         """Retrieve the profile of the authenticated user"""
-#         user = request.user
-#         serializer = UserProfileSerializer(user)
-#         return Response(serializer.data)
-    
 class AuthViewSet(viewsets.ModelViewSet):
     queryset = CustomUser.objects.all()
 
@@ -136,14 +125,6 @@ class GoogleAuthViewSet(viewsets.ModelViewSet):
         if created and password:
             user.set_password(password)
             user.save()
-        
-
-        # Generate OAuth2 token
-        # application = Application.objects.filter(client_type=Application.CLIENT_CONFIDENTIAL).first()
-        # if not application:
-        #     return Response({"error": "OAuth2 application not found"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-        # access_token = AccessToken.objects.create(user=user, application=application, token="some_generated_token")
 
         return Response(
             {
@@ -153,19 +134,6 @@ class GoogleAuthViewSet(viewsets.ModelViewSet):
             },
             status=status.HTTP_200_OK,
         )
-    
-# class DashboardViewSet(viewsets.ModelViewSet):
-#     @action(detail=False, methods=["get"], permission_classes=[IsAuthenticated])
-#     def get_profile_info(self, request):
-#         print(f"User: {request.user}, Authenticated: {request.user.is_authenticated}")
-        
-#         if not request.user.is_authenticated:
-#             return Response({"error": "User not authenticated"}, status=403)
-
-#         return Response({
-#             "first_name": request.user.first_name,
-#             "email": request.user.email,
-#         })
 
 class DashboardViewSet(viewsets.ViewSet):
     """Handles retrieving all necessary dashboard data in one API call."""
@@ -179,7 +147,6 @@ class DashboardViewSet(viewsets.ViewSet):
         user_data = UserProfileSerializer(user).data  # Serialize user info
         
         return Response({
-            "user": user_data,  # Send user profile data
-            # Add other necessary dashboard data here if needed
+            "user": user_data,  
         })
 
