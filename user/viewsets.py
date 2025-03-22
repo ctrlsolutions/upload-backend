@@ -17,8 +17,6 @@ from django.utils.decorators import method_decorator
 from django.contrib.auth import authenticate, login, logout
 from django.http import JsonResponse
 
-from rest_framework.decorators import api_view
-
 class AuthViewSet(viewsets.ModelViewSet):
     queryset = CustomUser.objects.all()
 
@@ -32,8 +30,6 @@ class AuthViewSet(viewsets.ModelViewSet):
         serializer = LogInSerializer(data=request.data)
         if serializer.is_valid():
             user = serializer.validated_data["user"]
-            print(user, "userid", serializer.validated_data["user_id"])
-            user_id = serializer.validated_data["user_id"]
             login(request, user)
 
             token, created = Token.objects.get_or_create(user=user)
@@ -41,7 +37,8 @@ class AuthViewSet(viewsets.ModelViewSet):
             return Response({
                 "message": "Login successful!",
                 "token": token.key,
-                "user_id": user_id
+                "user_id": user.user_id, 
+                "email": user.email  
             })
         
         return Response(serializer.errors, status=400)
@@ -121,7 +118,6 @@ class GoogleAuthViewSet(viewsets.ModelViewSet):
         )
 
         # IF DOMAIN != UP MAIL, RETURN BAD REQUEST
-
         if created and password:
             user.set_password(password)
             user.save()

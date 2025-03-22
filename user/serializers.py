@@ -40,8 +40,6 @@ class LogInSerializer(serializers.Serializer):
 
         return {
             "user": user,
-            "user_id": user.user_id, 
-            "email": user.email,
             "token": token.key,
         }
     
