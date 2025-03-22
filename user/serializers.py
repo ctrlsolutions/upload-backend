@@ -1,6 +1,8 @@
 from rest_framework import serializers
 from .models import CustomUser
-from django.contrib.auth import authenticate
+from django.contrib.auth import authenticate, get_user_model
+from rest_framework.authtoken.models import Token
+
 
 class SignUpSerializer(serializers.ModelSerializer):
     password =serializers.CharField(write_only=True)
@@ -11,7 +13,6 @@ class SignUpSerializer(serializers.ModelSerializer):
         fields = ['email', 'password', 'password2',  'first_name', 'middle_name', 'last_name', 'sex', 'birthdate']
     
     def validate(self, data):
-        # Check if passwords match
         if data['password'] != data['password2']:
             raise serializers.ValidationError({"password": "Passwords do not match."})
         return data
@@ -34,8 +35,13 @@ class LogInSerializer(serializers.Serializer):
         user = authenticate(email=data["email"], password=data["password"])
         if not user:
             raise serializers.ValidationError("Invalid credentials")
-        return {"user": user}
+        
+        token, created = Token.objects.get_or_create(user=user)
 
+        return {
+            "user": user,
+            "token": token.key,
+        }
     
 class UserProfileSerializer(serializers.ModelSerializer):
     class Meta:

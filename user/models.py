@@ -22,8 +22,6 @@ class CustomUserManager(BaseUserManager):
             raise ValueError('Superuser must have is_superuser=True.')
         return self.create_user(email, password, **kwargs)
 
-
-
 class CustomUser(AbstractBaseUser, PermissionsMixin):
     SEX_CHOICES = [
         ('M', 'Male'),
