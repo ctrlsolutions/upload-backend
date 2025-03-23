@@ -122,14 +122,16 @@ REST_FRAMEWORK = {
         "rest_framework.permissions.IsAuthenticated",
     ),
     "DEFAULT_AUTHENTICATION_CLASSES": (
+        "user.authentication.CookieTokenAuthentication",
         "rest_framework.authentication.TokenAuthentication",
     ),
 }
 
-CORS_ALLOW_CREDENTIALS = True  # Allow cookies in requests
-SESSION_COOKIE_SECURE = False  # True in production with HTTPS
-SESSION_COOKIE_SAMESITE = "None"  # Required for cross-origin session sharing
-SESSION_COOKIE_HTTPONLY = False
+SESSION_COOKIE_SAMESITE = "None"
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SAMESITE = "None"
+CSRF_COOKIE_SECURE = True
+
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
 
@@ -151,3 +153,5 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+

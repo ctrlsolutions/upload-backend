@@ -32,14 +32,10 @@ class AuthViewSet(viewsets.ModelViewSet):
             user = serializer.validated_data["user"]
             login(request, user)
 
-            token, created = Token.objects.get_or_create(user=user)
-
-            return Response({
-                "message": "Login successful!",
-                "token": token.key,
-                "user_id": user.user_id, 
-                "email": user.email  
-            })
+            token, _ = Token.objects.get_or_create(user=user)
+            response = JsonResponse({"message": "Login successful!", "user_id": user.user_id, "email": user.email  })
+            response.set_cookie("authToken", token.key, httponly=True, samesite="None", secure=True)
+            return response
         
         return Response(serializer.errors, status=400)
     
