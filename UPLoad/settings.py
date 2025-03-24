@@ -122,15 +122,14 @@ REST_FRAMEWORK = {
         "rest_framework.permissions.IsAuthenticated",
     ),
     "DEFAULT_AUTHENTICATION_CLASSES": (
-        "user.authentication.CookieTokenAuthentication",
-        "rest_framework.authentication.TokenAuthentication",
+       "rest_framework.authentication.SessionAuthentication",
     ),
 }
 
-SESSION_COOKIE_SAMESITE = "None"
-SESSION_COOKIE_SECURE = True
-CSRF_COOKIE_SAMESITE = "None"
-CSRF_COOKIE_SECURE = True
+SESSION_ENGINE = "django.contrib.sessions.backends.db"
+SESSION_COOKIE_HTTPONLY = True  # Prevents JS from accessing the session cookie
+SESSION_COOKIE_SAMESITE = "None"  # Prevents CSRF issues
+SESSION_COOKIE_SECURE = True  # Change to True in production with HTTPS
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/

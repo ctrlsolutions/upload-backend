@@ -35,7 +35,7 @@ class AuthViewSet(viewsets.ModelViewSet):
 
             token, _ = Token.objects.get_or_create(user=user)
             response = JsonResponse({"message": "Login successful!", "user_id": user.user_id, "email": user.email  })
-            response.set_cookie("authToken", token.key, httponly=True, samesite="None", secure=True)
+            # response.set_cookie("authToken", token.key, httponly=True, samesite="None", secure=True)
             print(response)
             return response
         
@@ -133,7 +133,7 @@ class DashboardViewSet(viewsets.ViewSet):
     """Handles retrieving all necessary dashboard data in one API call."""
     permission_classes = [IsAuthenticated]
     
-    @action(detail=False, methods=["get"], permission_classes=[IsAuthenticated], authentication_classes = [CookieTokenAuthentication])
+    @action(detail=False, methods=["get"], permission_classes=[IsAuthenticated])
     def dashboard_data(self, request):
         """Fetch all required dashboard data in one request."""
         user = request.user  # Get authenticated user
