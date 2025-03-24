@@ -16,6 +16,7 @@ from django.utils.decorators import method_decorator
 
 from django.contrib.auth import authenticate, login, logout
 from django.http import JsonResponse
+from user.authentication import CookieTokenAuthentication
 
 class AuthViewSet(viewsets.ModelViewSet):
     queryset = CustomUser.objects.all()
@@ -35,6 +36,7 @@ class AuthViewSet(viewsets.ModelViewSet):
             token, _ = Token.objects.get_or_create(user=user)
             response = JsonResponse({"message": "Login successful!", "user_id": user.user_id, "email": user.email  })
             response.set_cookie("authToken", token.key, httponly=True, samesite="None", secure=True)
+            print(response)
             return response
         
         return Response(serializer.errors, status=400)
@@ -130,15 +132,16 @@ class GoogleAuthViewSet(viewsets.ModelViewSet):
 class DashboardViewSet(viewsets.ViewSet):
     """Handles retrieving all necessary dashboard data in one API call."""
     permission_classes = [IsAuthenticated]
-
-    @action(detail=False, methods=["get"], permission_classes=[IsAuthenticated])
+    
+    @action(detail=False, methods=["get"], permission_classes=[IsAuthenticated], authentication_classes = [CookieTokenAuthentication])
     def dashboard_data(self, request):
         """Fetch all required dashboard data in one request."""
         user = request.user  # Get authenticated user
 
         user_data = UserProfileSerializer(user).data  # Serialize user info
         
+        print(user_data)
+        
         return Response({
             "user": user_data,  
         })
-
