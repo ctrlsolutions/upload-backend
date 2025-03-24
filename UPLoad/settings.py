@@ -78,7 +78,7 @@ TEMPLATES = [
 WSGI_APPLICATION = 'UPLoad.wsgi.application'
 
 CORS_ALLOWED_ORIGINS = config("CORS_ALLOWED_ORIGINS").split(",")
-
+CORS_ALLOW_CREDENTIALS = True
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
