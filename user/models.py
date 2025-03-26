@@ -6,7 +6,8 @@ class CustomUserManager(BaseUserManager):
         if not email:
             raise ValueError('The user must enter a valid email.')
         email = self.normalize_email(email)
-        user = self.model(email=email, **kwargs)
+        username = email.split('@')[0]
+        user = self.model(email=email, username=username, **kwargs)
         user.set_password(password)
         user.save()
         return user
@@ -41,6 +42,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     ]
 
     user_id = models.AutoField(primary_key=True)
+    username = models.CharField(max_length=50, unique=True)
 
     first_name = models.CharField(max_length=255, blank=True)
     middle_name = models.CharField(max_length=255, blank=True)
