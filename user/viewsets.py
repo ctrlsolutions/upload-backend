@@ -1,6 +1,4 @@
 from rest_framework import viewsets
-from rest_framework.permissions import AllowAny
-from rest_framework.authtoken.models import Token
 from .models import CustomUser
 
 from .serializers import SignUpSerializer, LogInSerializer, UserProfileSerializer
@@ -11,12 +9,12 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.decorators import action
-from django.views.decorators.csrf import ensure_csrf_cookie
+from django.views.decorators.csrf import ensure_csrf_cookie, csrf_exempt
 from django.utils.decorators import method_decorator
 
 from django.contrib.auth import authenticate, login, logout
 from django.http import JsonResponse
-from user.authentication import CookieTokenAuthentication
+from .permissions import IsAccountOwner
 
 class AuthViewSet(viewsets.ModelViewSet):
     queryset = CustomUser.objects.all()
@@ -32,10 +30,8 @@ class AuthViewSet(viewsets.ModelViewSet):
         if serializer.is_valid():
             user = serializer.validated_data["user"]
             login(request, user)
-
-            token, _ = Token.objects.get_or_create(user=user)
-            response = JsonResponse({"message": "Login successful!", "user_id": user.user_id, "email": user.email  })
-            # response.set_cookie("authToken", token.key, httponly=True, samesite="None", secure=True)
+            print(f"User authenticated: {request.user.is_authenticated}, User: {request.user}")
+            response = JsonResponse({"message": "Login successful!", "user_id": user.user_id, "username": user.username  })
             print(response)
             return response
         
@@ -44,15 +40,17 @@ class AuthViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=["post"], permission_classes=[IsAuthenticated])
     def logout(self, request):
         """Logs out a user and destroys the session."""
-        request.auth.delete()  # Delete the user's token
         logout(request)
         return Response({"message": "Logged out successfully!"})
     
-    @action(detail=False, methods=["get"], permission_classes=[IsAuthenticated])
-    def user(self, request):
+    @action(detail=False, methods=["get"], permission_classes=[IsAuthenticated, IsAccountOwner])
+    def status(self, request):
         """Gets the authenticated user."""
-        pass    
+
+        return Response({"message": f"Welcome {request.user.username}!"})
+    
     # Signup action
+    @method_decorator(csrf_exempt)
     @action(detail=False, methods=["post"], permission_classes=[AllowAny])
     def signup(self, request):
         """Creates a new user."""
