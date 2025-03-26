@@ -20,7 +20,7 @@ class SignUpSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         validated_data.pop("password2")
 
-        user = CustomUser(**validated_data)
+        user = CustomUser.objects.create_user(**validated_data)
 
         user.set_password(validated_data['password'])
         user.save()
@@ -36,11 +36,8 @@ class LogInSerializer(serializers.Serializer):
         if not user:
             raise serializers.ValidationError("Invalid credentials")
         
-        token, created = Token.objects.get_or_create(user=user)
-
         return {
             "user": user,
-            "token": token.key,
         }
     
 class UserProfileSerializer(serializers.ModelSerializer):
