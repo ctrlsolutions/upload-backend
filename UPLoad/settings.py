@@ -78,6 +78,8 @@ TEMPLATES = [
 WSGI_APPLICATION = 'UPLoad.wsgi.application'
 
 CORS_ALLOWED_ORIGINS = config("CORS_ALLOWED_ORIGINS").split(",")
+CSRF_TRUSTED_ORIGINS = config("CORS_ALLOWED_ORIGINS").split(",")
+
 CORS_ALLOW_CREDENTIALS = True
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
@@ -130,6 +132,9 @@ SESSION_ENGINE = "django.contrib.sessions.backends.db"
 SESSION_COOKIE_HTTPONLY = True  # Prevents JS from accessing the session cookie
 SESSION_COOKIE_SAMESITE = "None"  # Prevents CSRF issues
 SESSION_COOKIE_SECURE = True  # Change to True in production with HTTPS
+CSRF_COOKIE_SAMESITE = "None"
+CSRF_COOKIE_SECURE = True
+CSRF_COOKIE_HTTPONLY = False
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
