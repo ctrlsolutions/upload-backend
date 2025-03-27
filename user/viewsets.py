@@ -127,12 +127,12 @@ class GoogleAuthViewSet(viewsets.ModelViewSet):
             status=status.HTTP_200_OK,
         )
 
-class DashboardViewSet(viewsets.ViewSet):
+class ProfileViewSet(viewsets.ViewSet):
     """Handles retrieving all necessary dashboard data in one API call."""
     permission_classes = [IsAuthenticated]
     
     @action(detail=False, methods=["get"], permission_classes=[IsAuthenticated])
-    def dashboard_data(self, request):
+    def get_data(self, request):
         """Fetch all required dashboard data in one request."""
         user = request.user  # Get authenticated user
 
@@ -143,3 +143,14 @@ class DashboardViewSet(viewsets.ViewSet):
         return Response({
             "user": user_data,  
         })
+    
+    @action(detail=False, methods=["patch"], permission_classes=[IsAuthenticated])
+    def update_profile(self, request):
+        """Update user profile"""
+        user = request.user
+        print(user)
+        serializer = UserProfileSerializer(user, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({"message": "Profile updated", "user": serializer.data})
+        return Response(serializer.errors, status=400)
