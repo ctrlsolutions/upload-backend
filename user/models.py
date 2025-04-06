@@ -22,6 +22,40 @@ class CustomUserManager(BaseUserManager):
         if kwargs.get('is_superuser') is not True:
             raise ValueError('Superuser must have is_superuser=True.')
         return self.create_user(email, password, **kwargs)
+class Permission(models.Model):
+    name = models.CharField(max_length=255, unique=True)
+    code_name = models.CharField(max_length=255, unique=True)
+class Role(models.Model):
+    role_id = models.AutoField(primary_key=True)
+    code = models.CharField(max_length=10, unique=True)
+    name = models.CharField(max_length=255)
+    
+    parent = models.ForeignKey("self", null=True, blank=True, on_delete=models.SET_NULL, related_name="children" )
+
+    def has_permission(self, permission_code):
+        return permission_code in [perm.code_name for perm in self.get_permissions()]
+        
+    def get_permissions(self):
+        """Top down approach"""
+        permissions = set(self.permissions.all())
+        for child in self.children.all():
+            permissions.update(child.get_permissions())
+        return permissions
+
+    
+    permissions = models.ManyToManyField(
+    Permission,
+    through='RolePermission',
+    through_fields=('role', 'permission'),
+    related_name='roles'
+)
+    def __str__(self):
+        return self.name
+
+
+class RolePermission(models.Model):
+    role = models.ForeignKey(Role, on_delete=models.CASCADE)
+    permission = models.ForeignKey(Permission, on_delete=models.CASCADE)
 
 class CustomUser(AbstractBaseUser, PermissionsMixin):
     SEX_CHOICES = [
@@ -29,16 +63,6 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
         ('F', 'Female'),
         ('O', 'Other'),
         ('P', 'Prefer not to say')
-    ]
-
-    ROLES = [
-        ('CL', 'Clerk'),
-        ('RE', 'Researcher'),
-        ('FA', 'Faculty'),
-        ('DH', 'Department Head'),
-        ('CD', 'College Dean'),
-        ('CH', 'Chancellor'),
-        ('AD', 'Admin')
     ]
 
     user_id = models.AutoField(primary_key=True)
@@ -51,7 +75,9 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     sex = models.CharField(max_length=2, blank=True, choices=SEX_CHOICES)
     email = models.EmailField(unique=True)
     birthdate = models.DateField(null=True, blank=True)
-    role = models.CharField(max_length=3, choices=ROLES)
+
+    role = models.ForeignKey(Role, on_delete=models.SET_NULL, null=True, blank=True)
+
     google_id = models.CharField(max_length=255, blank=True, null=True)
 
     is_active = models.BooleanField(default=True)
@@ -79,33 +105,29 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
         verbose_name_plural = 'Users'
 
     def has_role(self, role_code):
-        return self.role == role_code
+        return self.role.code == role_code
+    
+    def has_permission(self, permission_codename):
+        return self.role and self.role.has_permission(permission_codename)
 
 
     def __str__(self):
         return self.email
+    
 
+class College(models.Model):
+    college_id = models.AutoField(primary_key=True)
+    code = models.CharField(max_length=10, unique=True)
+    name = models.CharField(max_length=255)
 
-class BaseStaff(CustomUser):
-    class Meta:
-        proxy = True
+    def __str__(self):
+        return f"{self.name} ({self.code})"
 
+class Department(models.Model):
+    department_id = models.AutoField(primary_key=True)
+    code = models.CharField(max_length=10, unique=True)
+    name = models.CharField(max_length=255)
+    college = models.ForeignKey(College, on_delete=models.CASCADE, related_name="departments")
 
-class Faculty(CustomUser):
-    class Meta:
-        proxy = True
-
-
-class DepartmentHead(Faculty):
-    class Meta:
-        proxy = True
-
-
-class CollegeDean(DepartmentHead):
-    class Meta:
-        proxy = True
-
-
-class Chancellor(CollegeDean):
-    class Meta:
-        proxy = True
+    def __str__(self):
+        return f"{self.name} ({self.college.code})"
