@@ -1,61 +1,27 @@
-from rest_framework import viewsets, status, permissions
+from rest_framework import viewsets, status
+
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.decorators import action
+from django.views.decorators.csrf import ensure_csrf_cookie, csrf_exempt
+from django.utils.decorators import method_decorator
 
 from .models import Report, ResearchReport, PublicationReport, OthersReport
-from .serializers import (
-    ResearchSerializer,
-    PublicationSerializer,
-    OthersSerializer
-)
-class ResearchReportViewSet(viewsets.ModelViewSet):
-    """
-    ViewSet for managing Research Reports.
-    Handles CRUD operations for ResearchReport, including the nested Report creation/update.
-    """
-    queryset = ResearchReport.objects.select_related('report_id').all() 
-    serializer_class = ResearchSerializer
-    permission_classes = [permissions.IsAuthenticated]
+from .serializers import SubmitReportSerializer, ResearchSerializer, PublicationSerializer, OthersSerializer
 
-    def get_queryset(self):
-        """
-        Optionally filter reports to only show those belonging to the current user.
-        """
-        user = self.request.user
-        if user.is_authenticated:
-            return ResearchReport.objects.select_related('report_id').filter(report_id__user_id=user)
-
-        return ResearchReport.objects.none()
-
-class PublicationReportViewSet(viewsets.ModelViewSet):
-    """
-    ViewSet for managing Publication Reports.
-    """
-    queryset = PublicationReport.objects.select_related('report_id').all()
-    serializer_class = PublicationSerializer
-    permission_classes = [permissions.IsAuthenticated]
-
-    def get_queryset(self):
-        """
-        Optionally filter reports to only show those belonging to the current user.
-        """
-        user = self.request.user
-        if user.is_authenticated:
-            return PublicationReport.objects.select_related('report_id').filter(report_id__user_id=user)
-        return PublicationReport.objects.none()
-
-class OthersReportViewSet(viewsets.ModelViewSet):
-    """
-    ViewSet for managing Other Reports.
-    """
-    queryset = OthersReport.objects.select_related('report_id').all()
-    serializer_class = OthersSerializer
-    permission_classes = [permissions.IsAuthenticated]
-
-    def get_queryset(self):
-        """
-        Optionally filter reports to only show those belonging to the current user.
-        """
-        user = self.request.user
-        if user.is_authenticated:
-            return OthersReport.objects.select_related('report_id').filter(report_id__user_id=user)
-        return OthersReport.objects.none()
+class ReportViewSet(viewsets.ViewSet):
+    permission_classes = [IsAuthenticated]
+    
+    @action(detail=False, methods=["post"])
+    def post_data(self, request):
+        user = request.user 
+        serializer = SubmitReportSerializer(data=request.data)
+        
+        if serializer.is_valid():
+            serializer.save(user=user)
+            return Response({
+                "message": "Report submitted successfully.",
+                "report": serializer.data
+            }, status=status.HTTP_201_CREATED)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
