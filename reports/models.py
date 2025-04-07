@@ -21,7 +21,7 @@ class PublisherType(models.TextChoices):
 class Report(models.Model):
     id = models.AutoField(primary_key=True)
     title = models.CharField(max_length=255)
-    user_id = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="reports")
+    user_id = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="reports", null=True, blank=True)
     created_on = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -39,14 +39,14 @@ class PublicationReport(models.Model):
     report_id = models.OneToOneField(Report, on_delete=models.CASCADE, related_name="publication_report")
     publication_title = models.CharField(max_length=255)
     publication_type = models.CharField(
-        max_length=20,
+        max_length=42,
         choices=PublicationType.choices
     )
     author_names = ArrayField(models.CharField(max_length=255), blank=True, default=list)
     publication_date = models.DateField()
     publisher_name = models.CharField(max_length=255)
     publisher_type = models.CharField(
-        max_length=20,
+        max_length=32,
         choices=PublisherType.choices
     )
     publisher_location = models.CharField(
