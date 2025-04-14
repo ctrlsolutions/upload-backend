@@ -6,7 +6,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework import viewsets
 
-class ReportViewSet(viewsets.ViewSet):
+class ReportViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'], url_path='history', permission_classes=[IsAuthenticated])
     def report_history(self, request):
         user = request.user
@@ -34,6 +34,6 @@ class ReportViewSet(viewsets.ViewSet):
             # default to own reports only if role is missing or unrecognized
             reports = Report.objects.filter(user_id=user)
 
-        reports = reports.select_related('user_id__college', 'user_id__department')
+        reports = reports.select_related('user_id', 'college_id', 'department_id')
         serializer = ReportHistorySerializer(reports, many=True)
         return Response(serializer.data)
