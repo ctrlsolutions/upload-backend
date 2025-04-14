@@ -23,5 +23,4 @@ urlpatterns = [
     # path("user/", include(user.urls)),    
 
     path('api/', include((router.urls, 'core_api'), namespace='core_api')),
-    path('api/reports/', include('report.urls')), 
 ]
