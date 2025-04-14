@@ -1,39 +1,50 @@
-from django.db import models
-from .models import Report
-from .serializers import ReportHistorySerializer
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
-from rest_framework.decorators import action
-from rest_framework import viewsets
+from rest_framework import serializers
+from user.models import College  
+from user.models import Department
+from .models import Report, CustomUser
 
-class ReportViewSet(viewsets.ViewSet):
-    @action(detail=False, methods=['get'], url_path='history', permission_classes=[IsAuthenticated])
-    def report_history(self, request):
-        user = request.user
-        user_role = user.role.code if user.role else None
+class ReportHistorySerializer(serializers.ModelSerializer):
+    college = serializers.CharField(source='user_id.college.code', read_only=True)  # Access the college name
+    department = serializers.CharField(source='user_id.department.code', read_only=True)  # Access the department name
+    time_submitted = serializers.SerializerMethodField()
+    report_type = serializers.SerializerMethodField()
+    formatted_author = serializers.SerializerMethodField()
 
+    class Meta:
+        model = Report
+        fields = ['created_on', 'time_submitted', 'formatted_author', 'college', 'department', 'report_type', 'title']
+
+    def get_formatted_author(self, obj):
+        full_name = obj.user_id.get_full_name() 
+        name_parts = full_name.strip().split()
         
-        if user_role == 'F': # Faculty
-            reports = Report.objects.filter(user_id=user)
-        
-        elif user_role == 'DP': # Department Chair
-            reports = Report.objects.filter(
-                models.Q(user_id=user) | models.Q(department_id=user.department_id)
-            )
+        if len(name_parts) < 2:
+            return full_name  # fallback for short names
 
-        elif user_role == 'CD': # College Dean
-            reports = Report.objects.filter(
-                models.Q(user_id=user) | models.Q(college_id=user.college_id)
-            )
+        last_name = name_parts[-1]
+        initials = ''.join([part[0] for part in name_parts[:-1]])
+        return f"{last_name}, {initials.upper()}"
+    
+    def get_time_submitted(self, obj):
+        return obj.created_on.strftime("%I:%M %p").lower()
 
-        elif user_role == 'C': # Chancellor
-            reports = Report.objects.all()
-
-
-        else:
-            # default to own reports only if role is missing or unrecognized
-            reports = Report.objects.filter(user_id=user)
-
-        reports = reports.select_related('user_id__college', 'user_id__department')
-        serializer = ReportHistorySerializer(reports, many=True)
-        return Response(serializer.data)
+    def get_report_type(self, obj):
+        if hasattr(obj, 'research_report'):
+            return 'Research Report'
+        elif hasattr(obj, 'publication_report'):
+            return 'Publication Report'
+        elif hasattr(obj, 'paper_report_model'):
+            return 'Paper Presentation Report'
+        elif hasattr(obj, 'patent_report_model'):
+            return 'Patent Report'
+        elif hasattr(obj, 'other_research_report_model'):
+            return 'Other Research Output Report'
+        elif hasattr(obj, 'training_report_model'):
+            return 'Training Report'
+        elif hasattr(obj, 'extension_report_model'):
+            return 'Extension Report'
+        elif hasattr(obj, 'partnership_report_model'):
+            return 'Partnership Report'
+        elif hasattr(obj, 'others_report'):
+            return 'Others Report'
+        return 'Unknown Report Type'

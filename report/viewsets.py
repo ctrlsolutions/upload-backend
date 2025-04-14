@@ -1,8 +1,3 @@
-from rest_framework import viewsets
-from .models import Report
-
-class ReportViewSet(viewsets.ViewSet):
-    pass  # Methods will be added later
 from django.db import models
 from .models import Report
 from .serializers import ReportHistorySerializer
