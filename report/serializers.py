@@ -16,6 +16,7 @@ class ReportHistorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Report
         fields = [
+                'id',
                 'is_owner', 
                 'created_on', 
                 'time_submitted', 
