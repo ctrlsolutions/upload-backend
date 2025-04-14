@@ -22,9 +22,11 @@ class CustomUserManager(BaseUserManager):
         if kwargs.get('is_superuser') is not True:
             raise ValueError('Superuser must have is_superuser=True.')
         return self.create_user(email, password, **kwargs)
+    
 class Permission(models.Model):
     name = models.CharField(max_length=255, unique=True)
     code_name = models.CharField(max_length=255, unique=True)
+
 class Role(models.Model):
     role_id = models.AutoField(primary_key=True)
     code = models.CharField(max_length=10, unique=True)
@@ -77,12 +79,15 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     birthdate = models.DateField(null=True, blank=True)
 
     role = models.ForeignKey(Role, on_delete=models.SET_NULL, null=True, blank=True)
-
     google_id = models.CharField(max_length=255, blank=True, null=True)
 
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     is_superuser = models.BooleanField(default=False)
+
+    # Add ForeignKey to Department
+    department = models.ForeignKey('Department', on_delete=models.SET_NULL, null=True, blank=True)
+    college = models.ForeignKey('College', on_delete=models.SET_NULL, null=True, blank=True)
 
     objects = CustomUserManager()
 
@@ -110,10 +115,13 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     def has_permission(self, permission_codename):
         return self.role and self.role.has_permission(permission_codename)
 
-
     def __str__(self):
         return self.email
     
+    def get_full_name(self):
+        # Combine first and last name, with middle name if it exists
+        full_name = f"{self.first_name} {self.middle_name[:1] + '. ' if self.middle_name else ''}{self.last_name}"
+        return full_name
 
 class College(models.Model):
     college_id = models.AutoField(primary_key=True)

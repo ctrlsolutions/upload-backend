@@ -7,24 +7,17 @@ from django.views.decorators.csrf import ensure_csrf_cookie, csrf_exempt
 from django.utils.decorators import method_decorator
 
 from .models import Report, ResearchReport, PublicationReport, OthersReport
-from .serializers import SubmitReportSerializer, ResearchSerializer, PublicationSerializer, PaperSerializer, PatentSerializer, OtherResearchSerializer, TrainingSerializer, ExtensionSerializer, PartnershipSerializer, OthersSerializer
+from .serializers import ReportHistorySerializer, SubmitReportSerializer, ResearchSerializer, PublicationSerializer, PaperSerializer, PatentSerializer, OtherResearchSerializer, TrainingSerializer, ExtensionSerializer, PartnershipSerializer, OthersSerializer
 
-# class ReportViewSet(viewsets.ViewSet):
-#     permission_classes = [AllowAny]
-    
-#     @action(detail=False, methods=["post"])
-#     def post_data(self, request):
-#         user = request.user 
-#         serializer = SubmitReportSerializer(data=request.data)
-        
-#         if serializer.is_valid():
-#             serializer.save(user=user)
-#             return Response({
-#                 "message": "Report submitted successfully.",
-#                 "report": serializer.data
-#             }, status=status.HTTP_201_CREATED)
-#         else:
-#             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+from rest_framework.viewsets import ViewSet
+
+class ReportHistoryViewSet(ViewSet):
+    permission_classes = [IsAuthenticated]  # or AllowAny for full access during dev
+
+    def list(self, request, *args, **kwargs):
+        reports = Report.objects.all()
+        serializer = ReportHistorySerializer(reports, many=True)
+        return Response(serializer.data)
 
 class ReportViewSet(viewsets.ViewSet):
     """
