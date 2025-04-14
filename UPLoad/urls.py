@@ -16,7 +16,6 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-
 from .routers import router
 
 urlpatterns = [
@@ -24,4 +23,5 @@ urlpatterns = [
     # path("user/", include(user.urls)),    
 
     path('api/', include((router.urls, 'core_api'), namespace='core_api')),
+    path('api/reports/', include('report.urls')), 
 ]
