@@ -3,17 +3,31 @@ from user.models import College, Department
 from .models import Report, CustomUser
 
 class ReportHistorySerializer(serializers.ModelSerializer):
-    college = serializers.CharField(source='college_id.code', read_only=True)
-    department = serializers.CharField(source='department_id.code', read_only=True)
+    college_code = serializers.CharField(source='college_id.code', read_only=True)
+    department_code = serializers.CharField(source='department_id.code', read_only=True)
     time_submitted = serializers.SerializerMethodField()
     report_type = serializers.CharField(source='get_report_type_display', read_only=True)
     formatted_author = serializers.SerializerMethodField()
     created_on = serializers.SerializerMethodField()
+    is_owner = serializers.SerializerMethodField()
+    college_name = serializers.CharField(source='college_id.name', read_only=True)
+    department_name = serializers.CharField(source='department_id.name', read_only=True)
 
     class Meta:
         model = Report
-        fields = ['created_on', 'time_submitted', 'formatted_author', 'college', 'department', 'report_type', 'title']
-        
+        fields = [
+                'is_owner', 
+                'created_on', 
+                'time_submitted', 
+                'formatted_author', 
+                'college_code', 
+                'department_code', 
+                'report_type', 
+                'title',
+                'college_name',
+                'department_name',
+            ]
+    
     def get_formatted_author(self, obj):
         first_name = obj.user_id.first_name or ""
         last_name = obj.user_id.last_name or ""
@@ -31,3 +45,6 @@ class ReportHistorySerializer(serializers.ModelSerializer):
     
     def get_created_on(self, obj):
         return obj.created_on.strftime("%B %d, %Y") 
+    
+    def get_is_owner(self, obj):
+        return obj.user_id == self.context['request'].user

@@ -1,10 +1,10 @@
-from django.db import models
-from .models import Report
-from .serializers import ReportHistorySerializer
-from rest_framework.permissions import IsAuthenticated
+from django.db.models import Q
 from rest_framework.response import Response
 from rest_framework.decorators import action
+from rest_framework.permissions import IsAuthenticated
 from rest_framework import viewsets
+from .models import Report
+from .serializers import ReportHistorySerializer
 
 class ReportViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'], url_path='history', permission_classes=[IsAuthenticated])
@@ -12,28 +12,29 @@ class ReportViewSet(viewsets.ModelViewSet):
         user = request.user
         user_role = user.role.code if user.role else None
 
-        
-        if user_role == 'F': # Faculty
-            reports = Report.objects.filter(user_id=user)
-        
-        elif user_role == 'DP': # Department Chair
+        user_reports = Report.objects.filter(user_id=user)
+        user_department_ids = user_reports.values_list('department_id', flat=True).distinct()
+        user_college_ids = user_reports.values_list('college_id', flat=True).distinct()
+
+        if user_role == 'F':  # Faculty
+            reports = user_reports
+
+        elif user_role == 'DC':  # Department Chair
             reports = Report.objects.filter(
-                models.Q(user_id=user) | models.Q(department_id=user.department_id)
+                Q(user_id=user) | Q(department_id__in=user_department_ids)
             )
 
-        elif user_role == 'CD': # College Dean
+        elif user_role == 'CD':  # College Dean
             reports = Report.objects.filter(
-                models.Q(user_id=user) | models.Q(college_id=user.college_id)
+                Q(user_id=user) | Q(college_id__in=user_college_ids)
             )
 
-        elif user_role == 'C': # Chancellor
+        elif user_role == 'C':  # Chancellor
             reports = Report.objects.all()
 
-
         else:
-            # default to own reports only if role is missing or unrecognized
-            reports = Report.objects.filter(user_id=user)
+            reports = user_reports
 
-        reports = reports.select_related('user_id', 'college_id', 'department_id')
-        serializer = ReportHistorySerializer(reports, many=True)
+        reports = reports.select_related('user_id', 'department_id', 'college_id')
+        serializer = ReportHistorySerializer(reports, many=True, context={'request': request})
         return Response(serializer.data)
