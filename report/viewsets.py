@@ -43,7 +43,7 @@ class ReportViewSet(viewsets.ModelViewSet):
         if not ids:
             return Response({"detail": "No report IDs provided."}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Only allow deleting reports owned by user
+        # Allow only deleting reports owned by user
         reports = Report.objects.filter(id__in=ids, user_id=request.user)
         deleted_count = reports.count()
         reports.delete()
