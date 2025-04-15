@@ -9,7 +9,6 @@ from rest_framework import status
 from rest_framework.exceptions import PermissionDenied
 
 class ReportViewSet(viewsets.ModelViewSet):
-    
     @action(detail=False, methods=['get'], url_path='history', permission_classes=[IsAuthenticated])
     def report_history(self, request):
         user = request.user
@@ -19,20 +18,14 @@ class ReportViewSet(viewsets.ModelViewSet):
             reports = Report.objects.filter(user_id=user)
 
         elif user_role == 'DC':  # Department Chair
-            # Get all department_ids that the user has ever been associated with
-            department_ids = Report.objects.filter(user_id=user).values_list('department_id', flat=True)
-            if department_ids:
-                reports = Report.objects.filter(Q(user_id=user) | Q(department_id__in=department_ids))
-            else:
-                reports = Report.objects.filter(user_id=user)
+            reports = Report.objects.filter(
+                Q(user_id=user) | Q(department_id=user.department)
+            )
 
         elif user_role == 'CD':  # College Dean
-            # Get all college_ids that the user has ever been associated with
-            college_ids = Report.objects.filter(user_id=user).values_list('college_id', flat=True)
-            if college_ids:
-                reports = Report.objects.filter(Q(user_id=user) | Q(college_id__in=college_ids))
-            else:
-                reports = Report.objects.filter(user_id=user)
+            reports = Report.objects.filter(
+                Q(user_id=user) | Q(college_id=user.college)
+            )
 
         elif user_role == 'C':  # Chancellor
             reports = Report.objects.all()
