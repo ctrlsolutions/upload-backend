@@ -26,9 +26,13 @@ class Report(models.Model):
 
     def __str__(self):
         return self.title
-    
-class ResearchReport(models.Model):
-    report_id = models.OneToOneField(Report, on_delete=models.CASCADE, related_name="research_report")
+
+class AbstarctBaseReport(models.Model):
+    report_id = models.OneToOneField(Report, on_delete=models.CASCADE, related_name="report")
+    file = models.FileField()
+    class Meta:
+            abstract = True
+class ResearchReport(AbstarctBaseReport):
     timeframe = models.CharField(max_length=255)
     start_date = models.DateField()
     end_date = models.DateField()
@@ -36,7 +40,6 @@ class ResearchReport(models.Model):
     source_of_funding = models.CharField(max_length=255)
 
 class PublicationReport(models.Model):
-    report_id = models.OneToOneField(Report, on_delete=models.CASCADE, related_name="publication_report")
     publication_title = models.CharField(max_length=255)
     publication_type = models.CharField(
         max_length=42,
@@ -61,7 +64,6 @@ class PublicationReport(models.Model):
     number_of_citations = models.IntegerField()
 
 class PaperPresentationReport(models.Model): 
-    report_id = models.OneToOneField(Report, on_delete=models.CASCADE, related_name="paper_presentation_report")
     research_title = models.CharField(max_length=255)
     presented_paper_title = models.CharField(max_length=255)
     presentation_type = models.CharField(max_length=100)
@@ -74,7 +76,6 @@ class PaperPresentationReport(models.Model):
     presentation_date = models.DateField()
 
 class PatentReport(models.Model):
-    report_id = models.OneToOneField(Report, on_delete=models.CASCADE, related_name="patent_report") # Adjust related_name as needed
     patent_title = models.CharField(max_length=255)
     patent_type = models.CharField(max_length=100) 
     application_no = models.CharField(max_length=100) 
@@ -88,7 +89,6 @@ class PatentReport(models.Model):
     industry_utilization = models.TextField(null=True, blank=True) # Changed to TextField, added null/blank
 
 class OtherResearchReport(models.Model): 
-    report_id = models.OneToOneField(Report, on_delete=models.CASCADE, related_name="other_research_report") # Adjust related_name as needed
     output_title = models.CharField(max_length=255)
     output_type = models.CharField(max_length=100) 
     public_event_type = models.CharField(max_length=100) 
@@ -102,7 +102,6 @@ class OtherResearchReport(models.Model):
     industry_utilization = models.TextField(null=True, blank=True) # Changed to TextField, added null/blank
 
 class TrainingReport(models.Model):
-    report_id = models.OneToOneField(Report, on_delete=models.CASCADE, related_name="training_report") # Adjust related_name as needed
     activity_type = models.CharField(max_length=100) 
     course_or_service_title = models.CharField(max_length=255)
     venue = models.CharField(max_length=255)
@@ -115,7 +114,6 @@ class TrainingReport(models.Model):
     source_of_funding = models.CharField(max_length=255, null=True, blank=True) # Added null/blank
 
 class ExtensionReport(models.Model): 
-    report_id = models.OneToOneField(Report, on_delete=models.CASCADE, related_name="extension_report") # Adjust related_name as needed
     title = models.CharField(max_length=255)
     components = models.TextField() # Changed to TextField
     scope = models.CharField(max_length=100) 
@@ -126,7 +124,6 @@ class ExtensionReport(models.Model):
     source_of_funding = models.CharField(max_length=255, null=True, blank=True) # Added null/blank
 
 class PartnershipReport(models.Model): 
-    report_id = models.OneToOneField(Report, on_delete=models.CASCADE, related_name="partnership_report") # Adjust related_name as needed
     type_of_extension_activities_under_this_partnership = models.CharField(max_length=255)
     extension_partnership_title = models.CharField(max_length=255)
     up_scope_of_work = models.TextField() # Changed to TextField
@@ -137,5 +134,4 @@ class PartnershipReport(models.Model):
     partnership_agreement_effectivity_end_date = models.DateField(null=True, blank=True) # Added null/blank
 
 class OthersReport(models.Model):
-    report_id = models.OneToOneField(Report, on_delete=models.CASCADE, related_name="others_report")
     description = models.TextField()

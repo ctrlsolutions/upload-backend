@@ -9,22 +9,6 @@ from django.utils.decorators import method_decorator
 from .models import Report, ResearchReport, PublicationReport, OthersReport
 from .serializers import SubmitReportSerializer, ResearchSerializer, PublicationSerializer, PaperSerializer, PatentSerializer, OtherResearchSerializer, TrainingSerializer, ExtensionSerializer, PartnershipSerializer, OthersSerializer
 
-# class ReportViewSet(viewsets.ViewSet):
-#     permission_classes = [AllowAny]
-    
-#     @action(detail=False, methods=["post"])
-#     def post_data(self, request):
-#         user = request.user 
-#         serializer = SubmitReportSerializer(data=request.data)
-        
-#         if serializer.is_valid():
-#             serializer.save(user=user)
-#             return Response({
-#                 "message": "Report submitted successfully.",
-#                 "report": serializer.data
-#             }, status=status.HTTP_201_CREATED)
-#         else:
-#             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class ReportViewSet(viewsets.ViewSet):
     """
