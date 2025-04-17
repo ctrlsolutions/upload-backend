@@ -20,7 +20,8 @@ class ResearchSerializer(serializers.ModelSerializer):
             'start_date',
             'end_date',
             'name_of_researchers',
-            'source_of_funding'
+            'source_of_funding',
+            'file'
         ]
 
     def create(self, validated_data):
@@ -67,7 +68,8 @@ class PublicationSerializer(serializers.ModelSerializer):
             'issue_number',
             'doi_or_url',
             'isbn_or_issn',
-            'number_of_citations'
+            'number_of_citations',
+            'file'
         ]
 
     def create(self, validated_data):
@@ -105,6 +107,7 @@ class PaperSerializer(serializers.ModelSerializer):
             'conference_start_date',
             'conference_end_date',
             'presentation_date',
+            'file'
         ]
 
     def create(self, validated_data):
@@ -142,6 +145,7 @@ class PatentSerializer(serializers.ModelSerializer):
             'registration_number',
             'commerical_product_name',
             'industry_utilization',
+            'file'
         ]
 
     def create(self, validated_data):
@@ -180,6 +184,7 @@ class OtherResearchSerializer(serializers.ModelSerializer):
             'event_end_date',
             'output_firstshownorreleasedtopublic_date',
             'industry_utilization',
+            'file'
         ]
 
     def create(self, validated_data):
@@ -216,6 +221,7 @@ class TrainingSerializer(serializers.ModelSerializer):
             'hours_required_to_complete',
             'number_of_trainees_served',
             'source_of_funding',
+            'file'
         ]
 
     def create(self, validated_data):
@@ -251,6 +257,7 @@ class ExtensionSerializer(serializers.ModelSerializer):
             'target_beneficiary_group',
             'tbg_served',
             'source_of_funding',
+            'file'
         ]
 
     def create(self, validated_data):
@@ -286,6 +293,7 @@ class PartnershipSerializer(serializers.ModelSerializer):
             'partnership_agreement_type',
             'partnership_agreement_effectivity_start_date',
             'partnership_agreement_effectivity_end_date',
+            'file'
         ]
 
     def create(self, validated_data):
@@ -310,7 +318,7 @@ class OthersSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = OthersReport
-        fields = ['report', 'description']
+        fields = ['report', 'description', 'file']
 
     def create(self, validated_data):
         report_data = validated_data.pop('report')
