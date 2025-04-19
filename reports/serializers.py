@@ -1,7 +1,6 @@
 from rest_framework import serializers
 from .models import *
 
-
 class SupportingDocumentSerializer(serializers.ModelSerializer):
     class Meta:
         model = SupportingDocument
@@ -37,8 +36,6 @@ class ReportSerializer(serializers.ModelSerializer):
 
         return report_instance
 
-
-
 class ResearchSerializer(ReportSerializer):
     class Meta(ReportSerializer.Meta):
         model = ResearchReport
@@ -50,10 +47,7 @@ class ResearchSerializer(ReportSerializer):
             'source_of_funding'
         ]
 
-
-
 class PublicationSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = PublicationReport
         fields = [
@@ -93,7 +87,6 @@ class PublicationSerializer(serializers.ModelSerializer):
         return publication_report_instance
     
 class PaperSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = ResearchReport
         fields = [
@@ -130,7 +123,6 @@ class PaperSerializer(serializers.ModelSerializer):
         return paper_report_instance
     
 class PatentSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = ResearchReport
         fields = [
@@ -167,7 +159,6 @@ class PatentSerializer(serializers.ModelSerializer):
         return patent_report_instance
     
 class OtherResearchSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = ResearchReport
         fields = [
@@ -205,7 +196,6 @@ class OtherResearchSerializer(serializers.ModelSerializer):
         return other_research_report_instance
     
 class TrainingSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = ResearchReport
         fields = [
@@ -241,7 +231,6 @@ class TrainingSerializer(serializers.ModelSerializer):
         return training_report_instance
     
 class ExtensionSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = ResearchReport
         fields = [
@@ -276,7 +265,6 @@ class ExtensionSerializer(serializers.ModelSerializer):
         return extension_report_instance
     
 class PartnershipSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = ResearchReport
         fields = [
@@ -311,7 +299,6 @@ class PartnershipSerializer(serializers.ModelSerializer):
         return partnership_report_instance
 
 class OthersSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = OthersReport
         fields = ['report', 'description', 'file']
