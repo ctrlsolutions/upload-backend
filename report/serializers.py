@@ -1,55 +1,55 @@
 from rest_framework import serializers
-from .models import Report, ResearchReport, PublicationReport, OthersReport
+from .models import *
 
-class SubmitReportSerializer(serializers.ModelSerializer):
+
+class SupportingDocumentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SupportingDocument
+        fields = ['file']
+        read_only_fields = ['owner']
+
+
+class ReportSerializer(serializers.ModelSerializer):
+    supporting_document = SupportingDocumentSerializer(many=True, required=False)
     class Meta:
         model = Report
-        fields = ['id', 'title', 'user_id', 'created_on']
+        fields = ['title', 'created_on', 'supporting_document']
         read_only_fields = ['id', 'user_id', 'created_on']
 
+    def create(self, validated_data):
+        user = self.context['request'].user if 'request' in self.context else None
+        validated_data['user'] = user
+        if not user or not user.is_authenticated: #for dev
+            print("WARNING: Creating report without user during unauthenticated request.")
 
-class ResearchSerializer(serializers.ModelSerializer):
-    report = SubmitReportSerializer(required=False)
+        supporting_document_data = validated_data.pop('supporting_document',[])
+        report_instance = Report.objects.create(**validated_data)
 
+        if supporting_document_data:
+            serialized_document = SupportingDocumentSerializer(
+                data=supporting_document_data,
+                many=True,
+                context=self.context
+            )
+            serialized_document.is_valid(raise_exception=True)
+            serialized_document.save(owner=report_instance)
+
+
+        return report_instance
+
+class ResearchSerializer(ReportSerializer):
     class Meta:
         model = ResearchReport
-        fields = [
-            'report',
-            'id',
+        fields = ReportSerializer.Meta.fields + [
             'timeframe',
             'start_date',
             'end_date',
             'name_of_researchers',
-            'source_of_funding',
-            'file'
+            'source_of_funding'
         ]
 
-    def create(self, validated_data):
-        report_data = validated_data.pop('report', None)
-        user = self.context['request'].user if 'request' in self.context else None
-        report_instance = None
-
-        if report_data:
-            if user and user.is_authenticated:
-                report_instance = Report.objects.create(**report_data, user_id=user)
-            else:
-                print("WARNING: Creating report without user during unauthenticated request.")
-                report_instance = Report.objects.create(**report_data)
-        else:
-            default_report_data = {'title': 'Untitled Research'} # Add default title or other fields
-            if user and user.is_authenticated:
-                report_instance = Report.objects.create(**default_report_data, user_id=user)
-            else:
-                report_instance = Report.objects.create(**default_report_data)
-
-        research_report_instance = ResearchReport.objects.create(
-            report_id=report_instance,  # Assign the Report instance directly
-            **validated_data
-        )
-        return research_report_instance
 
 class PublicationSerializer(serializers.ModelSerializer):
-    report = SubmitReportSerializer(read_only=True)
 
     class Meta:
         model = PublicationReport
@@ -90,7 +90,6 @@ class PublicationSerializer(serializers.ModelSerializer):
         return publication_report_instance
     
 class PaperSerializer(serializers.ModelSerializer):
-    report = SubmitReportSerializer(read_only=True)
 
     class Meta:
         model = ResearchReport
@@ -128,7 +127,6 @@ class PaperSerializer(serializers.ModelSerializer):
         return paper_report_instance
     
 class PatentSerializer(serializers.ModelSerializer):
-    report = SubmitReportSerializer(read_only=True)
 
     class Meta:
         model = ResearchReport
@@ -166,7 +164,6 @@ class PatentSerializer(serializers.ModelSerializer):
         return patent_report_instance
     
 class OtherResearchSerializer(serializers.ModelSerializer):
-    report = SubmitReportSerializer(read_only=True)
 
     class Meta:
         model = ResearchReport
@@ -205,7 +202,6 @@ class OtherResearchSerializer(serializers.ModelSerializer):
         return other_research_report_instance
     
 class TrainingSerializer(serializers.ModelSerializer):
-    report = SubmitReportSerializer(read_only=True)
 
     class Meta:
         model = ResearchReport
@@ -242,7 +238,6 @@ class TrainingSerializer(serializers.ModelSerializer):
         return training_report_instance
     
 class ExtensionSerializer(serializers.ModelSerializer):
-    report = SubmitReportSerializer(read_only=True)
 
     class Meta:
         model = ResearchReport
@@ -278,7 +273,6 @@ class ExtensionSerializer(serializers.ModelSerializer):
         return extension_report_instance
     
 class PartnershipSerializer(serializers.ModelSerializer):
-    report = SubmitReportSerializer(read_only=True)
 
     class Meta:
         model = ResearchReport
@@ -314,7 +308,6 @@ class PartnershipSerializer(serializers.ModelSerializer):
         return partnership_report_instance
 
 class OthersSerializer(serializers.ModelSerializer):
-    report = SubmitReportSerializer(read_only=True)
 
     class Meta:
         model = OthersReport
