@@ -27,19 +27,18 @@ class Report(models.Model):
     def __str__(self):
         return self.title
 
-class AbstarctBaseReport(models.Model):
-    report_id = models.OneToOneField(Report, on_delete=models.CASCADE, related_name="report")
-    file = models.FileField()
-    class Meta:
-            abstract = True
-class ResearchReport(AbstarctBaseReport):
+class SupportingDocument(models.Model):
+    file = models.FileField(upload_to='uploads/', null=True, blank=True)
+    owner = models.ForeignKey(Report, on_delete=models.CASCADE, related_name='supporting_document', null=True, default=None)
+    
+class ResearchReport(Report):
     timeframe = models.CharField(max_length=255)
     start_date = models.DateField()
     end_date = models.DateField()
     name_of_researchers = ArrayField(models.CharField(max_length=255), blank=True, default=list)
     source_of_funding = models.CharField(max_length=255)
 
-class PublicationReport(models.Model):
+class PublicationReport(Report):
     publication_title = models.CharField(max_length=255)
     publication_type = models.CharField(
         max_length=42,
@@ -63,7 +62,7 @@ class PublicationReport(models.Model):
     isbn_or_issn = models.CharField(max_length=255)
     number_of_citations = models.IntegerField()
 
-class PaperPresentationReport(models.Model): 
+class PaperPresentationReport(Report): 
     research_title = models.CharField(max_length=255)
     presented_paper_title = models.CharField(max_length=255)
     presentation_type = models.CharField(max_length=100)
@@ -75,7 +74,7 @@ class PaperPresentationReport(models.Model):
     conference_end_date = models.DateField()
     presentation_date = models.DateField()
 
-class PatentReport(models.Model):
+class PatentReport(Report):
     patent_title = models.CharField(max_length=255)
     patent_type = models.CharField(max_length=100) 
     application_no = models.CharField(max_length=100) 
@@ -88,7 +87,7 @@ class PatentReport(models.Model):
     commerical_product_name = models.CharField(max_length=255, null=True, blank=True) # Added null/blank
     industry_utilization = models.TextField(null=True, blank=True) # Changed to TextField, added null/blank
 
-class OtherResearchReport(models.Model): 
+class OtherResearchReport(Report): 
     output_title = models.CharField(max_length=255)
     output_type = models.CharField(max_length=100) 
     public_event_type = models.CharField(max_length=100) 
@@ -101,7 +100,7 @@ class OtherResearchReport(models.Model):
     output_firstshownorreleasedtopublic_date = models.DateField()
     industry_utilization = models.TextField(null=True, blank=True) # Changed to TextField, added null/blank
 
-class TrainingReport(models.Model):
+class TrainingReport(Report):
     activity_type = models.CharField(max_length=100) 
     course_or_service_title = models.CharField(max_length=255)
     venue = models.CharField(max_length=255)
@@ -113,8 +112,7 @@ class TrainingReport(models.Model):
     number_of_trainees_served = models.PositiveIntegerField(null=True, blank=True) # Changed to PositiveIntegerField, added null/blank
     source_of_funding = models.CharField(max_length=255, null=True, blank=True) # Added null/blank
 
-class ExtensionReport(models.Model): 
-    title = models.CharField(max_length=255)
+class ExtensionReport(Report): 
     components = models.TextField() # Changed to TextField
     scope = models.CharField(max_length=100) 
     start_date = models.DateField()
@@ -123,7 +121,7 @@ class ExtensionReport(models.Model):
     tbg_served = models.PositiveIntegerField(null=True, blank=True) # Changed to PositiveIntegerField, added null/blank
     source_of_funding = models.CharField(max_length=255, null=True, blank=True) # Added null/blank
 
-class PartnershipReport(models.Model): 
+class PartnershipReport(Report): 
     type_of_extension_activities_under_this_partnership = models.CharField(max_length=255)
     extension_partnership_title = models.CharField(max_length=255)
     up_scope_of_work = models.TextField() # Changed to TextField
@@ -133,5 +131,5 @@ class PartnershipReport(models.Model):
     partnership_agreement_effectivity_start_date = models.DateField()
     partnership_agreement_effectivity_end_date = models.DateField(null=True, blank=True) # Added null/blank
 
-class OthersReport(models.Model):
+class OthersReport(Report):
     description = models.TextField()

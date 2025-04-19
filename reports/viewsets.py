@@ -5,9 +5,10 @@ from rest_framework.response import Response
 from rest_framework.decorators import action
 from django.views.decorators.csrf import ensure_csrf_cookie, csrf_exempt
 from django.utils.decorators import method_decorator
+from rest_framework.parsers import MultiPartParser, FormParser
 
 from .models import Report, ResearchReport, PublicationReport, OthersReport
-from .serializers import SubmitReportSerializer, ResearchSerializer, PublicationSerializer, PaperSerializer, PatentSerializer, OtherResearchSerializer, TrainingSerializer, ExtensionSerializer, PartnershipSerializer, OthersSerializer
+from .serializers import ReportSerializer, ResearchSerializer, PublicationSerializer, PaperSerializer, PatentSerializer, OtherResearchSerializer, TrainingSerializer, ExtensionSerializer, PartnershipSerializer, OthersSerializer
 
 
 class ReportViewSet(viewsets.ViewSet):
@@ -16,6 +17,7 @@ class ReportViewSet(viewsets.ViewSet):
     Provides separate endpoints for creating Research, Publication, and Other reports.
     """
     permission_classes = [AllowAny] #For testing purposes, change to IsAuthenticated in production
+    parser_classes = [MultiPartParser, FormParser]
 
     def _create_specific_report(self, request, serializer_class):
         """
