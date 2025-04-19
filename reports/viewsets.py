@@ -38,7 +38,10 @@ class ReportViewSet(viewsets.ViewSet):
         Expects nested payload: {"report": {"title": "..."}, "timeframe": ..., ...}
         URL: POST /api/reports/research/
         """
-        return self._create_specific_report(request, ResearchSerializer)
+        print('viewset recieved: ', request)
+        forlog = self._create_specific_report(request, ResearchSerializer)
+        print(forlog)
+        return forlog
 
     @action(detail=False, methods=['post'], url_path='publication')
     def create_publication_report(self, request):

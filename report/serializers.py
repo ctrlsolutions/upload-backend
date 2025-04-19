@@ -5,40 +5,42 @@ from .models import *
 class SupportingDocumentSerializer(serializers.ModelSerializer):
     class Meta:
         model = SupportingDocument
-        fields = ['file']
-        read_only_fields = ['owner']
-
+        fields = ['file', 'owner']
 
 class ReportSerializer(serializers.ModelSerializer):
-    supporting_document = SupportingDocumentSerializer(many=True, required=False)
+    supporting_document = serializers.ListField(
+        child=serializers.FileField(),
+        write_only=True,
+        required=False
+    )
+
     class Meta:
         model = Report
         fields = ['title', 'created_on', 'supporting_document']
         read_only_fields = ['id', 'user_id', 'created_on']
 
     def create(self, validated_data):
+        print("Validated data at create():", validated_data)
+
         user = self.context['request'].user if 'request' in self.context else None
-        validated_data['user'] = user
-        if not user or not user.is_authenticated: #for dev
-            print("WARNING: Creating report without user during unauthenticated request.")
+        if user and user.is_authenticated:
+            validated_data['user_id'] = user
+        else:
+            print("WARNING: Anonymous user — 'user' not set on report.")
 
-        supporting_document_data = validated_data.pop('supporting_document',[])
-        report_instance = Report.objects.create(**validated_data)
+        supporting_document_data = validated_data.pop('supporting_document', [])
+        
+        report_instance = self.Meta.model.objects.create(**validated_data)
 
-        if supporting_document_data:
-            serialized_document = SupportingDocumentSerializer(
-                data=supporting_document_data,
-                many=True,
-                context=self.context
-            )
-            serialized_document.is_valid(raise_exception=True)
-            serialized_document.save(owner=report_instance)
-
+        for file in supporting_document_data:
+            SupportingDocument.objects.create(file=file, owner=report_instance)
 
         return report_instance
 
+
+
 class ResearchSerializer(ReportSerializer):
-    class Meta:
+    class Meta(ReportSerializer.Meta):
         model = ResearchReport
         fields = ReportSerializer.Meta.fields + [
             'timeframe',
@@ -47,6 +49,7 @@ class ResearchSerializer(ReportSerializer):
             'name_of_researchers',
             'source_of_funding'
         ]
+
 
 
 class PublicationSerializer(serializers.ModelSerializer):
