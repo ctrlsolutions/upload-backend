@@ -39,7 +39,6 @@ class ResearchReport(Report):
     source_of_funding = models.CharField(max_length=255)
 
 class PublicationReport(Report):
-    publication_title = models.CharField(max_length=255)
     publication_type = models.CharField(
         max_length=42,
         choices=PublicationType.choices
@@ -88,7 +87,6 @@ class PatentReport(Report):
     industry_utilization = models.TextField(null=True, blank=True) # Changed to TextField, added null/blank
 
 class OtherResearchReport(Report): 
-    output_title = models.CharField(max_length=255)
     output_type = models.CharField(max_length=100) 
     public_event_type = models.CharField(max_length=100) 
     event_title = models.CharField(max_length=255)

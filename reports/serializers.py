@@ -64,13 +64,11 @@ class PublicationSerializer(serializers.ModelSerializer):
             'isbn_or_issn',
             'number_of_citations'
         ]
-
     
 class PaperSerializer(serializers.ModelSerializer):
     class Meta:
-        model = ResearchReport
+        model = PaperPresentationReport
         fields =  ReportSerializer.Meta.fields + [
-            'research_title',
             'presented_paper_title',
             'presentation_type',
             'conference_title',
@@ -85,7 +83,7 @@ class PaperSerializer(serializers.ModelSerializer):
     
 class PatentSerializer(serializers.ModelSerializer):
     class Meta:
-        model = ResearchReport
+        model = PatentReport
         fields =  ReportSerializer.Meta.fields + [
             'patent_title',
             'patent_type',
@@ -101,9 +99,9 @@ class PatentSerializer(serializers.ModelSerializer):
 
 class OtherResearchSerializer(serializers.ModelSerializer):
     class Meta:
-        model = ResearchReport
+        model = OtherResearchReport
         fields =  ReportSerializer.Meta.fields + [
-            'output_title',
+            'title',
             'output_type',
             'public_event_type',
             'event_title',
@@ -118,7 +116,7 @@ class OtherResearchSerializer(serializers.ModelSerializer):
     
 class TrainingSerializer(serializers.ModelSerializer):
     class Meta:
-        model = ResearchReport
+        model = TrainingReport
         fields =  ReportSerializer.Meta.fields + [
             'activity_type',
             'course_or_service_title',
@@ -133,9 +131,8 @@ class TrainingSerializer(serializers.ModelSerializer):
 
 class ExtensionSerializer(serializers.ModelSerializer):
     class Meta:
-        model = ResearchReport
+        model = ExtensionReport
         fields =  ReportSerializer.Meta.fields + [
-            'title',
             'components',
             'scope',
             'start_date',
@@ -147,7 +144,7 @@ class ExtensionSerializer(serializers.ModelSerializer):
     
 class PartnershipSerializer(serializers.ModelSerializer):
     class Meta:
-        model = ResearchReport
+        model = PartnershipReport
         fields =  ReportSerializer.Meta.fields + [
             'type_of_extension_activities_under_this_partnership',
             'extension_partnership_title',
@@ -162,5 +159,5 @@ class PartnershipSerializer(serializers.ModelSerializer):
 class OthersSerializer(serializers.ModelSerializer):
     class Meta:
         model = OthersReport
-        fields =  ReportSerializer.Meta.fields + ['report', 'description', 'file']
+        fields =  ReportSerializer.Meta.fields + ['description']
 
