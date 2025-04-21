@@ -1,7 +1,6 @@
 from rest_framework import serializers
-from .models import CustomUser
-from django.contrib.auth import authenticate, get_user_model
-from rest_framework.authtoken.models import Token
+from .models import CustomUser, Department, College
+from django.contrib.auth import authenticate
 
 
 class SignUpSerializer(serializers.ModelSerializer):
@@ -26,7 +25,7 @@ class SignUpSerializer(serializers.ModelSerializer):
         user.save()
 
         return user
-    
+
 class LogInSerializer(serializers.Serializer):
     email = serializers.EmailField()
     password = serializers.CharField(write_only=True)
@@ -44,3 +43,15 @@ class UserProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
         fields = ['first_name', 'middle_name', 'last_name', 'email', 'role']
+
+class DepartmentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Department
+        fields = ['department_id', 'name']
+
+class CollegeDepartmentsSerializer(serializers.ModelSerializer):
+    departments = DepartmentSerializer(many=True)
+
+    class Meta:
+        model = College
+        fields = ['college_id', 'name', 'departments']

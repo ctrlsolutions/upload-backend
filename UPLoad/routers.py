@@ -1,6 +1,6 @@
 from rest_framework import routers
 
-from user.viewsets import AuthViewSet, GoogleAuthViewSet, ProfileViewSet
+from user.viewsets import AuthViewSet, GoogleAuthViewSet, ProfileViewSet, CollegeDepartmentViewset
 from report.viewsets import ReportViewSet
 
 router = routers.SimpleRouter()
@@ -8,6 +8,7 @@ router = routers.SimpleRouter()
 router.register(r'user', AuthViewSet, basename="user")
 router.register(r'user/google', GoogleAuthViewSet, basename="google")
 router.register(r'profile', ProfileViewSet, basename="profile")
-router.register(r'reports', ReportViewSet, basename='report')
+router.register(r'reports', ReportViewSet, basename="report")
+router.register(r'cd', CollegeDepartmentViewset, basename="cd")
 
 urlpatterns = router.urls
