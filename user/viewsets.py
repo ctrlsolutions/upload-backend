@@ -1,7 +1,7 @@
 from rest_framework import viewsets
-from .models import CustomUser
+from .models import CustomUser, College, Department, Role, RolePermission, Permission
 
-from .serializers import SignUpSerializer, LogInSerializer, UserProfileSerializer
+from .serializers import SignUpSerializer, LogInSerializer, UserProfileSerializer, CollegeDepartmentsSerializer, DepartmentSerializer
 
 import requests
 
@@ -154,3 +154,13 @@ class ProfileViewSet(viewsets.ViewSet):
             serializer.save()
             return Response({"message": "Profile updated", "user": serializer.data})
         return Response(serializer.errors, status=400)
+    
+class CollegeDepartmentViewset(viewsets.ViewSet):
+    permission_classes = [AllowAny]
+
+    @action(detail=False, methods=["get"])
+    def get_college_departments(self, request):
+        """Get college/department pairs"""
+        colleges = College.objects.prefetch_related('departments').all()
+        serializer = CollegeDepartmentsSerializer(colleges, many=True)
+        return Response(serializer.data)
