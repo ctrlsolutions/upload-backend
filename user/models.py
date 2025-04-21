@@ -56,6 +56,22 @@ class Role(models.Model):
 class RolePermission(models.Model):
     role = models.ForeignKey(Role, on_delete=models.CASCADE)
     permission = models.ForeignKey(Permission, on_delete=models.CASCADE)
+class College(models.Model):
+    college_id = models.AutoField(primary_key=True)
+    code = models.CharField(max_length=10, unique=True)
+    name = models.CharField(max_length=255)
+
+    def __str__(self):
+        return f"{self.name} ({self.code})"
+
+class Department(models.Model):
+    department_id = models.AutoField(primary_key=True)
+    code = models.CharField(max_length=10, unique=True)
+    name = models.CharField(max_length=255)
+    college = models.ForeignKey(College, on_delete=models.CASCADE, related_name="departments")
+
+    def __str__(self):
+        return f"{self.name} ({self.college.code})"
 
 class CustomUser(AbstractBaseUser, PermissionsMixin):
     SEX_CHOICES = [
@@ -79,6 +95,9 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     role = models.ForeignKey(Role, on_delete=models.SET_NULL, null=True, blank=True)
 
     google_id = models.CharField(max_length=255, blank=True, null=True)
+
+    department_id =  models.ForeignKey(Department, on_delete=models.SET_NULL, null=True)
+    college_id = models.ForeignKey(College, on_delete=models.SET_NULL, null=True)
 
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
@@ -115,19 +134,3 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
         return self.email
     
 
-class College(models.Model):
-    college_id = models.AutoField(primary_key=True)
-    code = models.CharField(max_length=10, unique=True)
-    name = models.CharField(max_length=255)
-
-    def __str__(self):
-        return f"{self.name} ({self.code})"
-
-class Department(models.Model):
-    department_id = models.AutoField(primary_key=True)
-    code = models.CharField(max_length=10, unique=True)
-    name = models.CharField(max_length=255)
-    college = models.ForeignKey(College, on_delete=models.CASCADE, related_name="departments")
-
-    def __str__(self):
-        return f"{self.name} ({self.college.code})"
