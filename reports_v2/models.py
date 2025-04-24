@@ -53,6 +53,9 @@ class Response(models.Model):
     def __str__(self):
         return f"Response for {self.form.title} by {self.user if self.user else 'Anonymous'}"
 
-# Example helper method to fetch all answers for a particular user in a specific form
-def get_user_responses(form_id, user_id):
-    return Response.objects.filter(form_id=form_id, user_id=user_id)
+class ResponseDocument(models.Model):
+    response = models.ForeignKey(Response, on_delete=models.CASCADE, related_name='supporting_documents')
+    file = models.FileField(upload_to='form_documents/')
+    
+    def __str__(self):
+        return f"Document for response {self.response.id} - Field: {self.field.label if self.field else 'General'}"
