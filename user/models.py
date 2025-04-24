@@ -90,14 +90,14 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
 
     sex = models.CharField(max_length=2, blank=True, choices=SEX_CHOICES)
     email = models.EmailField(unique=True)
-    birthdate = models.DateField(null=True, blank=True)
+    birth_date = models.DateField(null=True, blank=True)
 
     role = models.ForeignKey(Role, on_delete=models.SET_NULL, null=True, blank=True)
 
     google_id = models.CharField(max_length=255, blank=True, null=True)
 
-    department_id =  models.ForeignKey(Department, on_delete=models.SET_NULL, null=True)
-    college_id = models.ForeignKey(College, on_delete=models.SET_NULL, null=True)
+    department =  models.ForeignKey(Department, on_delete=models.SET_NULL, null=True)
+    college = models.ForeignKey(College, on_delete=models.SET_NULL, null=True)
 
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
@@ -133,4 +133,11 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     def __str__(self):
         return self.email
     
+class PredefinedRole(models.Model):
+    email = models.EmailField(unique=True)
+    role = models.ForeignKey("Role", on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f"{self.email} -> {self.role.code}"
+
 

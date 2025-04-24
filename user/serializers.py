@@ -9,7 +9,7 @@ class SignUpSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CustomUser
-        fields = ['email', 'password', 'password2',  'first_name', 'middle_name', 'last_name', 'sex', 'birthdate']
+        fields = ['email', 'password', 'password2',  'first_name', 'middle_name', 'last_name', 'sex', 'birth_date', 'college', 'department']
     
     def validate(self, data):
         if data['password'] != data['password2']:
@@ -38,16 +38,33 @@ class LogInSerializer(serializers.Serializer):
         return {
             "user": user,
         }
-    
-class UserProfileSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = CustomUser
-        fields = ['first_name', 'middle_name', 'last_name', 'email', 'role']
-
 class DepartmentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Department
         fields = ['department_id', 'name']
+
+class CollegeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = College
+        fields = ['college_id', 'name']
+    
+class UserProfileSerializer(serializers.ModelSerializer):
+    department = DepartmentSerializer(read_only=True)
+    college = CollegeSerializer(read_only=True)
+    role = serializers.CharField(source='role.name')
+
+    class Meta:
+        model = CustomUser
+        fields = [
+            'first_name',
+            'middle_name',
+            'last_name',
+            'email',
+            'role',
+            'college',
+            'department',
+        ]
+
 
 class CollegeDepartmentsSerializer(serializers.ModelSerializer):
     departments = DepartmentSerializer(many=True)

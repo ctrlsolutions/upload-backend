@@ -15,6 +15,7 @@ from django.utils.decorators import method_decorator
 from django.contrib.auth import authenticate, login, logout
 from django.http import JsonResponse
 from .permissions import IsAccountOwner
+from .utils import assign_predefined_role
 
 class AuthViewSet(viewsets.ModelViewSet):
     queryset = CustomUser.objects.all()
@@ -30,8 +31,8 @@ class AuthViewSet(viewsets.ModelViewSet):
         if serializer.is_valid():
             user = serializer.validated_data["user"]
             login(request, user)
-            print(f"User authenticated: {request.user.is_authenticated}, User: {request.user}")
-            response = JsonResponse({"message": "Login successful!", "user_id": user.user_id, "username": user.username  })
+            print(f"User authenticated: {request.user.is_authenticated}, User: {user}")
+            response = JsonResponse({"message": "Login successful!", "username": user.username  })
             print(response)
             return response
         
@@ -59,7 +60,8 @@ class AuthViewSet(viewsets.ModelViewSet):
                 
         if serializer.is_valid():
             print("Validated data:", serializer.validated_data)
-            serializer.save()  # Save the new user
+            user = serializer.save()  # Save the new user
+            assign_predefined_role(user)
             return Response({"message": "User created successfully!"}, status=201)
         print("Errors:", serializer.errors)  # Debugging
         return Response(serializer.errors, status=400)
@@ -134,11 +136,9 @@ class ProfileViewSet(viewsets.ViewSet):
     @action(detail=False, methods=["get"], permission_classes=[IsAuthenticated])
     def get_data(self, request):
         """Fetch all required dashboard data in one request."""
-        user = request.user  # Get authenticated user
-
-        user_data = UserProfileSerializer(user).data  # Serialize user info
+        user = request.user
         
-        print(user_data)
+        user_data = UserProfileSerializer(user).data
         
         return Response({
             "user": user_data,  
