@@ -4,7 +4,7 @@ from .models import Form, Field, Response, ResponseDocument
 class FieldSerializer(serializers.ModelSerializer):
     class Meta:
         model = Field
-        fields = ['id', 'label', 'type', 'required', 'regex_validation', 'placeholder', 'options']
+        fields = ['id', 'label', 'type', 'required', 'regex_validation', 'placeholder', 'options','valid_date_range']
 
 class FormSerializer(serializers.ModelSerializer):
     # Include the related fields for each form instance
