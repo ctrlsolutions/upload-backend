@@ -1,7 +1,9 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.contrib.postgres.fields import DateRangeField
 from django.conf import settings
 
+# TODO: make it work with users. perms and all that fuckery
 # Choices for field types
 TEXT = 'text'
 NUMBER = 'number'
@@ -32,11 +34,12 @@ class Field(models.Model):
     form = models.ForeignKey(Form, on_delete=models.CASCADE, related_name='fields')
     label = models.CharField(max_length=100)
     type = models.CharField(max_length=20, choices=TYPES)
+
+    # validation stuff
     required = models.BooleanField(default=True)
     regex_validation = models.CharField(max_length=100, blank=True, null=True)
     placeholder = models.CharField(max_length=100, blank=True, null=True)
-    
-    # TODO: add a foeld for form validation
+    valid_date_range = DateRangeField(null=True, blank=True)
 
     # For multiple choice questions, store options
     options = models.JSONField(blank=True, null=True)  # Stores options for select or multiple choice fields
