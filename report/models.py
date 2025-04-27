@@ -64,9 +64,6 @@ class ResponseDocument(models.Model):
     def __str__(self):
         return f"Document for response {self.response.id} - Field: {self.field.label if self.field else 'General'}"
     
-from django.db import models
-from user.models import CustomUser, Department, College
-
 class Report(models.Model):
     class ReportType(models.TextChoices):
         RESEARCH = 'RESEARCH', 'Research Report'
