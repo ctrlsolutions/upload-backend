@@ -48,21 +48,6 @@ class Field(models.Model):
     def __str__(self):
         return self.label
 
-class Response(models.Model):
-    form = models.ForeignKey(Form, on_delete=models.CASCADE, related_name='responses')
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True)
-    submitted_on = models.DateTimeField(auto_now_add=True)
-    response = models.JSONField()  # Store responses as a JSON object, key:field_id, value:response
-
-    def __str__(self):
-        return f"Response for {self.form.title} by {self.user if self.user else 'Anonymous'}"
-
-class ResponseDocument(models.Model):
-    response = models.ForeignKey(Response, on_delete=models.CASCADE, related_name='supporting_documents')
-    file = models.FileField(upload_to='form_documents/')
-    
-    def __str__(self):
-        return f"Document for response {self.response.id} - Field: {self.field.label if self.field else 'General'}"
     
 class Report(models.Model):
     class ReportType(models.TextChoices):
@@ -93,9 +78,6 @@ class Report(models.Model):
     form = models.ForeignKey(
         Form, on_delete=models.SET_NULL, null=True, blank=True, related_name='reports'
     )
-    response = models.OneToOneField(
-        Response, on_delete=models.SET_NULL, null=True, blank=True, related_name='report'
-    )
 
     def __str__(self):
         return self.title
@@ -110,3 +92,20 @@ class ReportFormTemplate(models.Model):
 
     def __str__(self):
         return f"{self.get_report_type_display()} Template"
+
+
+class Response(models.Model):
+    report = models.ForeignKey(Report, on_delete=models.CASCADE, related_name='responses')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True)
+    submitted_on = models.DateTimeField(auto_now_add=True)
+    response = models.JSONField()  # Store responses as a JSON object, key:field_id, value:response
+
+    def __str__(self):
+        return f"Response for {self.report.title} by {self.user if self.user else 'Anonymous'}"
+
+class ResponseDocument(models.Model):
+    response = models.ForeignKey(Response, on_delete=models.CASCADE, related_name='supporting_documents')
+    file = models.FileField(upload_to='form_documents/')
+    
+    def __str__(self):
+        return f"Document for response {self.response.id} - Field: {self.field.label if self.field else 'General'}"

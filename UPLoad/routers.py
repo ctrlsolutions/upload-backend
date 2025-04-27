@@ -13,5 +13,6 @@ router.register(r'report', ReportViewSet, basename='report')
 router.register(r'ft', FormTemplateViewSet, basename='form-template')
 router.register(r'responses',ResponseViewSet, basename='responses')
 router.register(r'documents',ResponseDocumentViewSet, basename='documents')
+router.register(r'reports', ReportViewSet, basename='report')
 
 urlpatterns = router.urls
