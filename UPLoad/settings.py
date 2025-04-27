@@ -44,8 +44,6 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'report',
     'user',
-    'reports',
-    'reports_v2',
 ]
 
 MIDDLEWARE = [
@@ -79,7 +77,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'UPLoad.wsgi.application'
 
-CORS_ALLOWED_ORIGINS = ["http://localhost:5173"]
+CORS_ALLOWED_ORIGINS = config("CORS_ALLOWED_ORIGINS").split(",")
 CSRF_TRUSTED_ORIGINS = config("CORS_ALLOWED_ORIGINS").split(",")
 
 CORS_ALLOW_CREDENTIALS = True
@@ -159,7 +157,6 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
