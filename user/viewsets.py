@@ -155,7 +155,7 @@ class ProfileViewSet(viewsets.ViewSet):
             return Response({"message": "Profile updated", "user": serializer.data})
         return Response(serializer.errors, status=400)
     
-class CollegeDepartmentViewset(viewsets.ViewSet):
+class CollegeDepartmentViewSet(viewsets.ViewSet):
     permission_classes = [AllowAny]
 
     @action(detail=False, methods=["get"])
