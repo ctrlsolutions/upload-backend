@@ -6,28 +6,6 @@ from .serializers import FormSerializer, FieldSerializer, ResponseSerializer, Re
 from rest_framework import permissions
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
-
-
-class FormViewSet(viewsets.ModelViewSet):
-    queryset = Form.objects.all()
-    serializer_class = FormSerializer
-    permission_classes = [permissions.AllowAny] 
-
-    def retrieve(self, request, *args, **kwargs):
-        instance = self.get_object()
-        serializer = self.get_serializer(instance)
-        return Response(serializer.data)
-
-
-class FieldsViewSet(viewsets.ReadOnlyModelViewSet):
-    serializer_class = FieldSerializer
-    permission_classes = [permissions.AllowAny]
-
-    def get_queryset(self):
-        form_id = self.request.query_params.get('form_id')
-        if form_id:
-            return Field.objects.filter(form_id=form_id)
-        return Field.objects.none()
     
 class ResponseViewSet(viewsets.ModelViewSet):
     serializer_class = ResponseSerializer
