@@ -2,6 +2,101 @@ from django.core.management.base import BaseCommand
 from report.models import Form, Field, ReportFormTemplate, Report
 from django.contrib.auth import get_user_model
 from django.db import IntegrityError, transaction
+# from report.constants import ENTITY_TYPE_OPTIONS, TYPE_OF_PUBLICATION_OPTIONS, TYPE_OF_PUBLISHER_OPTIONS, LOCATION_OF_PUBLISHER_OPTIONS, RESEARCH_TITLE_OPTIONS, TYPE_OF_PRESENTATION_OPTIONS, LOCATION_OF_CONFERENCE_OPTIONS, TYPE_OF_PATENT_OPTIONS, USE_OF_PATENT_OPTIONS, REPORT_TYPE_DESCRIPTIONS
+
+ENTITY_TYPE_OPTIONS = [
+    {'value': 'UP_ENTITY', 'label': 'UP Entity'},
+    {'value': 'RP_GOVERNMENT_ENTITY_OR_PUBLIC_SECTOR_ENTITY', 'label': 'RP Government Entity or Public Sector Entity'},
+    {'value': 'RP_PRIVATE_SECTOR_ENTITY', 'label': 'RP Private Sector Entity'},
+    {'value': 'FOREIGN_OR_NONDOMESTIC_ENTITY', 'label': 'Foreign or Non-Domestic Entity'},
+]
+
+TYPE_OF_PUBLICATION_OPTIONS = [
+    {'value': 'PEER_REVIEWED_JOURNAL_ARTICLE', 'label': 'Peer Reviewed Journal Article'},
+    {'value': 'BOOK', 'label': 'Book'},
+    {'value': 'EDITED_OR_PEER_REVIEWED_BOOK_CHAPTER', 'label': 'Edited or Peer Reviewed Book Chapter'},
+    {'value': 'PEER_REVIEWED_CONFERENCE_PAPER_PUBLICATION', 'label': 'Peer Reviewed Conference Paper Publication'},
+    {'value': 'OTHER', 'label': 'Other'},
+]
+
+TYPE_OF_PUBLISHER_OPTIONS = [
+    {'value': 'COMMERCIAL', 'label': 'Commercial'},
+    {'value': 'LEARNED_SOCIETY_AND_ASSOCIATION', 'label': 'Learned Society and Association'},
+    {'value': 'UNIVERSITY_PRESS', 'label': 'University Press'},
+]
+
+LOCATION_OF_PUBLISHER_OPTIONS = [
+    {'value': 'LOCAL', 'label': 'Local'},
+    {'value': 'INTERNATIONAL', 'label': 'International'},
+]
+
+RESEARCH_TITLE_OPTIONS = [
+    {'value': 'Project ISAAC: Isolation, Screening, and Antimicrobial Activity of Compounds from Actinobacteria in Mainit Hot Springs, Cebu, Philippines', 'label': 'Project ISAAC: Isolation, Screening, and Antimicrobial Activity of Compounds from Actinobacteria in Mainit Hot Springs, Cebu, Philippines'},
+    {'value': 'An Edge-Based Model of SEIR Epidemics on Static Random Networks', 'label': 'An Edge-Based Model of SEIR Epidemics on Static Random Networks'},
+    {'value': 'On dual B-filters and Dual B-subalgebras in a Topolological Dual B-algebra', 'label': 'On dual B-filters and Dual B-subalgebras in a Topolological Dual B-algebra'},
+    {'value': 'Survey of Heatwaves in the Philippine Seas', 'label': 'Survey of Heatwaves in the Philippine Seas'},
+    {'value': 'Relationship between pearl formation and associated biofouling organisms in the pearl oysters of the Arabian Gulf', 'label': 'Relationship between pearl formation and associated biofouling organisms in the pearl oysters of the Arabian Gulf'},
+    {'value': 'Impacts of heatwaves and toxic algal blooms on the physiological performance and future aquaculture of the oysters Ostrea edulis and Magallana (Crassostrea) gigas', 'label': 'Impacts of heatwaves and toxic algal blooms on the physiological performance and future aquaculture of the oysters Ostrea edulis and Magallana (Crassostrea) gigas'},
+    {'value': 'River Ecosystem Health Assessment using Biomonitoring Tools', 'label': 'River Ecosystem Health Assessment using Biomonitoring Tools'},
+    {'value': 'Other', 'label': 'Other'},
+]
+
+TYPE_OF_PRESENTATION_OPTIONS = [
+    {'value': 'Oral Presentation', 'label': 'Oral Presentation'},
+    {'value': 'Poster Presentation', 'label': 'Poster Presentation'},
+]
+
+LOCATION_OF_CONFERENCE_OPTIONS = [
+    {'value': 'Institutional/In-House', 'label': 'Institutional/In-House'},
+    {'value': 'Local/Regional', 'label': 'Local/Regional'},
+    {'value': 'National', 'label': 'National'},
+    {'value': 'International', 'label': 'International'},
+]
+
+TYPE_OF_PATENT_OPTIONS = [
+    {'value': 'Invention', 'label': 'Invention'},
+    {'value': 'Utility Model', 'label': 'Utility Model'},
+    {'value': 'Industrial Design', 'label': 'Industrial Design'},
+]
+
+USE_OF_PATENT_OPTIONS = [
+    {'value': 'For development of technology', 'label': 'For development of technology'},
+    {'value': 'For service provision', 'label': 'For service provision'},
+    {'value': 'As an end-product in itself', 'label': 'As an end-product in itself'},
+]
+
+REPORT_TYPE_DESCRIPTIONS = {
+    Report.ReportType.RESEARCH: 
+    """Project/program/work must be part of the approved Research/Creative Work agenda and endorsed by the Dean/Head of Unit and/or approved by the Chancellor/Authorized Official.
+Exclude student theses and dissertations.
+Researcher/s here refer to full-time faculty members, REPS and staff, whether with permanent, temporary or contractual appointment, who are in service still during the coverage years in review.
+Exclude from this data collection those projects/works led by lecturers or non-regular part-time staff.""",
+    Report.ReportType.PUBLICATION: "Publications may be produced in print, online or in digital on non-print media.",
+    Report.ReportType.PAPER_PRESENTATION: "The same paper may be presented at different conference events.",
+    Report.ReportType.PATENT: "Please include only the inventions, utility models and industrial designs owned by the University of the Philippines.",
+    Report.ReportType.OTHER_RESEARCH: "Include research or creative work outputs that could not be categorized as peer-reviewed publication, academic conference paper presentation or patenting. The output must be exposed in a public event such as exhibitions, public performances, or publication, i.e., when the output was first shown in a public place or released to the public.",
+    Report.ReportType.TRAINING: "Training Course/Advisory Service must be part of the approved Extension Work Agenda.",
+    Report.ReportType.EXTENSION: "Extension Program must be part of the approved Extension Work Agenda.",
+    Report.ReportType.PARTNERSHIP: """The partner stakeholder must be another agency, organization, private company, media or any institution recognized by UP as a partner by means of a MOA, MOU or a partnership agreement.
+Extension Activity must be part of the approved Extension Work Agenda.
+""",
+    Report.ReportType.OTHERS: """Include but not limited to the following:
+- Teaching Awards
+- Authorships (Book/Textbook/Manual/Podcast)
+- New Academic Courses/Programs Developed
+- Policy papers
+- Copyrighted Software Products
+- Scientific Meetings/Symposia
+- Research Awards/IPAs
+- Hosting of Research Conferences
+- Public Service Awards
+- Attendance in Workshops/Trainings
+- Fellowships
+- Induction as Fellow in a Professional Society
+- Additional Degrees
+- Visiting Lecturer/Professor, Researcher
+- API activities""",
+}
 
 class Command(BaseCommand):
     help = 'Automate adding forms'
@@ -25,7 +120,7 @@ class Command(BaseCommand):
         try:
             with transaction.atomic():
                 # RESEARCH
-                research_form = Form.objects.create(title='Research', creator=user)
+                research_form = Form.objects.create(title='Research', description=REPORT_TYPE_DESCRIPTIONS[Report.ReportType.RESEARCH], creator=user)
                 research_form_fields = [
                     Field(form=research_form, label='Research Project/Program/Work Title', type='text'),
                     Field(form=research_form, label='Number of Months in Original Timeframe', type='number'),
@@ -36,12 +131,7 @@ class Command(BaseCommand):
                         form=research_form,
                         label='Source of Majority Share of this Research Funding',
                         type='select',
-                        options=[
-                            'UP Entity',
-                            'RP Government Entity or Public Sector Entity',
-                            'RP Private Sector Entity',
-                            'Foreign or Non-Domestic Entity'
-                        ]
+                         options=ENTITY_TYPE_OPTIONS
                     ),
                 ]
                 ReportFormTemplate.objects.create(
@@ -55,7 +145,7 @@ class Command(BaseCommand):
                 
 
                 # PUBLICATION AS A RESEARCH OUTPUT
-                publication_form = Form.objects.create(title='Publication as a Research Output', creator=user)
+                publication_form = Form.objects.create(title='Publication as a Research Output', description=REPORT_TYPE_DESCRIPTIONS[Report.ReportType.PUBLICATION], creator=user)
                 publication_form_fields = [
                     Field(form=publication_form, label='Publication Title', type='text', placeholder='title', required=True),
                     Field(form=publication_form, label='Author/Co-Authors', type='text', placeholder='Name', required=True),
@@ -66,34 +156,21 @@ class Command(BaseCommand):
                         label='Type of Publication',
                         type='select',
                         required=True,
-                        options=[
-                            {'value': 'PEER_REVIEWED_JOURNAL_ARTICLE', 'label': 'Peer Reviewed Journal Article'},
-                            {'value': 'BOOK', 'label': 'Book'},
-                            {'value': 'EDITED_OR_PEER_REVIEWED_BOOK_CHAPTER', 'label': 'Edited or Peer Reviewed Book Chapter'},
-                            {'value': 'PEER_REVIEWED_CONFERENCE_PAPER_PUBLICATION', 'label': 'Peer Reviewed Conference Paper Publication'},
-                            {'value': 'OTHER', 'label': 'Other'},
-                        ]
+                        options=TYPE_OF_PUBLICATION_OPTIONS
                     ),
                     Field(
                         form=publication_form,
                         label='Type of Publisher',
                         type='select',
                         required=True,
-                        options=[
-                            {'value': 'COMMERCIAL', 'label': 'Commercial'},
-                            {'value': 'LEARNED_SOCIETY_AND_ASSOCIATION', 'label': 'Learned Society and Association'},
-                            {'value': 'UNIVERSITY_PRESS', 'label': 'University Press'},
-                        ]
+                        options=TYPE_OF_PUBLISHER_OPTIONS
                     ),
                     Field(
                         form=publication_form,
                         label='Location of Publisher',
                         type='select',
                         required=True,
-                        options=[
-                            {'value': 'LOCAL', 'label': 'Local'},
-                            {'value': 'INTERNATIONAL', 'label': 'International'},
-                        ]
+                        options=LOCATION_OF_PUBLISHER_OPTIONS
                     ),
                     Field(form=publication_form, label='Volume Number', type='text', required=True),
                     Field(form=publication_form, label='Issue Number', type='text', required=True),
@@ -113,7 +190,7 @@ class Command(BaseCommand):
 
 
                 # PAPER PRESENTATION AS A RESEARCH OUTPUT
-                paper_presentation_form = Form.objects.create(title='Research paper', creator=user)
+                paper_presentation_form = Form.objects.create(title='Research paper', description=REPORT_TYPE_DESCRIPTIONS[Report.ReportType.PAPER_PRESENTATION], creator=user)
                 paper_presentation_fields = [
                     Field(
                         form=paper_presentation_form,
@@ -121,16 +198,7 @@ class Command(BaseCommand):
                         type='select',
                         placeholder='Select Research Title',
                         required=True,
-                        options=[
-                            {'value': 'Project ISAAC: Isolation, Screening, and Antimicrobial Activity of Compounds from Actinobacteria in Mainit Hot Springs, Cebu, Philippines', 'label': 'Project ISAAC: Isolation, Screening, and Antimicrobial Activity of Compounds from Actinobacteria in Mainit Hot Springs, Cebu, Philippines'},
-                            {'value': 'An Edge-Based Model of SEIR Epidemics on Static Random Networks', 'label': 'An Edge-Based Model of SEIR Epidemics on Static Random Networks'},
-                            {'value': 'On dual B-filters and Dual B-subalgebras in a Topolological Dual B-algebra', 'label': 'On dual B-filters and Dual B-subalgebras in a Topolological Dual B-algebra'},
-                            {'value': 'Survey of Heatwaves in the Philippine Seas', 'label': 'Survey of Heatwaves in the Philippine Seas'},
-                            {'value': 'Relationship between pearl formation and associated biofouling organisms in the pearl oysters of the Arabian Gulf', 'label': 'Relationship between pearl formation and associated biofouling organisms in the pearl oysters of the Arabian Gulf'},
-                            {'value': 'Impacts of heatwaves and toxic algal blooms on the physiological performance and future aquaculture of the oysters Ostrea edulis and Magallana (Crassostrea) gigas', 'label': 'Impacts of heatwaves and toxic algal blooms on the physiological performance and future aquaculture of the oysters Ostrea edulis and Magallana (Crassostrea) gigas'},
-                            {'value': 'River Ecosystem Health Assessment using Biomonitoring Tools', 'label': 'River Ecosystem Health Assessment using Biomonitoring Tools'},
-                            {'value': 'Other', 'label': 'Other'},
-                        ]
+                        options=RESEARCH_TITLE_OPTIONS
                     ),
                     Field(form=paper_presentation_form, label='Title of Paper Presented', type='text', placeholder='Title of Paper Presented', required=True),
                     Field(
@@ -138,10 +206,7 @@ class Command(BaseCommand):
                         label='Type of Presentation',
                         type='select',
                         required=True,
-                        options=[
-                            {'value': 'Oral Presentation', 'label': 'Oral Presentation'},
-                            {'value': 'Poster Presentation', 'label': 'Poster Presentation'},
-                        ]
+                        options=TYPE_OF_PRESENTATION_OPTIONS
                     ),
                     Field(form=paper_presentation_form, label='Title of Conference', type='text', placeholder='Title of Conference', required=True),
                     Field(form=paper_presentation_form, label='Name of Organizer', type='text', placeholder='Name of Organizer', required=True),
@@ -150,12 +215,7 @@ class Command(BaseCommand):
                         label='Location of Conference',
                         type='select',
                         required=True,
-                        options=[
-                            {'value': 'Institutional/In-House', 'label': 'Institutional/In-House'},
-                            {'value': 'Local/Regional', 'label': 'Local/Regional'},
-                            {'value': 'National', 'label': 'National'},
-                            {'value': 'International', 'label': 'International'},
-                        ]
+                        options=LOCATION_OF_CONFERENCE_OPTIONS
                     ),
                     Field(form=paper_presentation_form, label='Venue, City and Country', type='text', placeholder='Venue, City and Country', required=True),
                     Field(form=paper_presentation_form, label='Conference Start Date', type='date', required=True),
@@ -173,7 +233,7 @@ class Command(BaseCommand):
                     self.stdout.write("Paper presentation form fields successfully created.")
 
                 # PATENT AS A RESEARCH OUTPUT
-                patent_form = Form.objects.create(title='Patent as a Research Output', creator=user)
+                patent_form = Form.objects.create(title='Patent as a Research Output', description=REPORT_TYPE_DESCRIPTIONS[Report.ReportType.PATENT], creator=user)
                 patent_fields = [
                     Field(form=patent_form, label='Title', type='text', placeholder='Title', required=True),
                     Field(form=patent_form, label='Patent Title', type='text', placeholder='Title', required=True),
@@ -182,11 +242,7 @@ class Command(BaseCommand):
                         label='Type of Patent',
                         type='select',
                         required=True,
-                        options=[
-                            {'value': 'Invention', 'label': 'Invention'},
-                            {'value': 'Utility Model', 'label': 'Utility Model'},
-                            {'value': 'Industrial Design', 'label': 'Industrial Design'},
-                        ]
+                        options=TYPE_OF_PATENT_OPTIONS
                     ),
                     Field(form=patent_form, label='Application Number', type='text', placeholder='Application Number', required=True),
                     Field(form=patent_form, label='Name of Inventor/s', type='text', placeholder='Name of Inventor/s', required=True),
@@ -206,11 +262,7 @@ class Command(BaseCommand):
                         label='Use of Patent',
                         type='select',
                         required=True,
-                        options=[
-                            {'value': 'For development of technology', 'label': 'For development of technology'},
-                            {'value': 'For service provision', 'label': 'For service provision'},
-                            {'value': 'As an end-product in itself', 'label': 'As an end-product in itself'},
-                        ]
+                        options=USE_OF_PATENT_OPTIONS
                     ),
                 ]
 
@@ -224,7 +276,7 @@ class Command(BaseCommand):
                     self.stdout.write("Patent form fields successfully created.")
 
                 # OTHER RESEARCH OUTPUT
-                other_research_form = Form.objects.create(title='Other Research Output', creator=user)
+                other_research_form = Form.objects.create(title='Other Research Output', description=REPORT_TYPE_DESCRIPTIONS[Report.ReportType.OTHER_RESEARCH], creator=user)
                 other_research_fields = [
                     Field(form=other_research_form, label='Output Title', type='text', required=True),
                     Field(form=other_research_form, label='Type of Output', type='text', required=True),
@@ -249,7 +301,7 @@ class Command(BaseCommand):
                     self.stdout.write("Other research form fields successfully created.")
 
                 # TRAINING COURSE AND/OR ADVISORY SERVICE
-                training_advisory_form = Form.objects.create(title='Training Course and/or Advisory Service', creator=user)
+                training_advisory_form = Form.objects.create(title='Training Course and/or Advisory Service', description=REPORT_TYPE_DESCRIPTIONS[Report.ReportType.TRAINING], creator=user)
                 training_fields = [
                     Field(form=training_advisory_form, label='Title', type='text', required=True),
                     Field(form=training_advisory_form, label='Activity Type', type='text', required=True),
@@ -271,7 +323,7 @@ class Command(BaseCommand):
                     self.stdout.write("Training form fields successfully created.")
 
                 # EXTENSION PROGRAM
-                extension_form = Form.objects.create(title='Extension Program', creator=user)
+                extension_form = Form.objects.create(title='Extension Program', description=REPORT_TYPE_DESCRIPTIONS[Report.ReportType.EXTENSION], creator=user)
                 extension_fields = [
                     Field(form=extension_form, label='Title', type='text', required=True),
                     Field(form=extension_form, label='Components', type='text', required=True),
@@ -291,7 +343,7 @@ class Command(BaseCommand):
                     self.stdout.write("Extension form fields successfully created.")
 
                 # PARTNERSHIP WITH STAKEHOLDER
-                partnership_form = Form.objects.create(title='Partnership with Stakeholder', creator=user)
+                partnership_form = Form.objects.create(title='Partnership with Stakeholder', description=REPORT_TYPE_DESCRIPTIONS[Report.ReportType.PARTNERSHIP], creator=user)
                 partnership_fields = [
                     Field(form=partnership_form, label='Title', type='text', required=True),
                     Field(form=partnership_form, label='Extension Activities under Partnership', type='text', required=True),
@@ -310,7 +362,7 @@ class Command(BaseCommand):
                 partnership_fields_response = Field.objects.bulk_create(partnership_fields)
 
                 # OTHERS
-                others_form = Form.objects.create(title='Others', creator=user)
+                others_form = Form.objects.create(title='Others', description=REPORT_TYPE_DESCRIPTIONS[Report.ReportType.OTHERS], creator=user)
                 others_fields = [
                     Field(form=others_form, label='Title', type='text', required=True),
                     Field(form=others_form, label='Description', type='text', required=True),
