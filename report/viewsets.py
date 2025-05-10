@@ -73,7 +73,7 @@ class ResponseDocumentViewSet(viewsets.ReadOnlyModelViewSet):
     
 class ReportViewSet(viewsets.ViewSet):
     def list(self, request):
-        reports = Report.objects.all().order_by('created_on')  # Replace 'date' with the actual field name if needed
+        reports = Report.objects.all().order_by('created_on')
         serializer = ReportSerializer(reports, many=True)
         return Response(serializer.data)
 

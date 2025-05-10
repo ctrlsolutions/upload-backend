@@ -45,7 +45,7 @@ INSTALLED_APPS = [
     'report',
     'user',
     'django_extensions',
-
+    'schema_viewer'
 ]
 
 MIDDLEWARE = [

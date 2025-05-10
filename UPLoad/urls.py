@@ -26,6 +26,7 @@ urlpatterns = [
     # path("user/", include(user.urls)),    
 
     path('api/', include((router.urls, 'core_api'), namespace='core_api')),
+    path('schema-viewer/', include('schema_viewer.urls')),
 ]
 
 if settings.DEBUG:
