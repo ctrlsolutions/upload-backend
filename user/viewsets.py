@@ -20,6 +20,19 @@ from .utils import assign_predefined_role
 class AuthViewSet(viewsets.ModelViewSet):
     queryset = CustomUser.objects.all()
 
+    def get_serializer_class(self):
+        if self.action == "login":
+            return LogInSerializer
+        elif self.action == "signup":
+            return SignUpSerializer
+        elif self.action == "status":
+            return None
+        elif self.action == "logout":
+            return None
+        elif self.action == "csrf":
+            return None
+        raise NotImplementedError(f"No serializer defined for action '{self.action}'")
+
     @method_decorator(ensure_csrf_cookie)
     @action(detail=False, methods=['get'], permission_classes=[AllowAny])
     def csrf(self, request):
