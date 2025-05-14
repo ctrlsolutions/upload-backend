@@ -390,7 +390,7 @@
                             <th># of Submissions</th>
                         </tr>
                     </thead>
-                    <tbody id="report-table-body">
+                    <tbody>
                         {% for item in items %}
                         <tr>
                             <td>{{ item.type }}</td>
@@ -398,6 +398,12 @@
                         </tr>
                         {% endfor %}
                     </tbody>
+                    <tfoot>
+                        <tr class="total-row">
+                            <td>Total</td>
+                            <td>{{ items|length }}</td>
+                        </tr>
+                    </tfoot>
                 </table>
             </div>
         </section>
