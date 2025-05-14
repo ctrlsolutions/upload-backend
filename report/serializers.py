@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Form, Field, Response, ResponseDocument, ReportFormTemplate
+from .models import Form, Field, Response, ResponseDocument
 
 class FieldSerializer(serializers.ModelSerializer):
     class Meta:
@@ -11,7 +11,7 @@ class FormSerializer(serializers.ModelSerializer):
     fields = FieldSerializer(many=True, read_only=True)
     class Meta:
         model = Form
-        fields = ['id', 'title', 'description', 'active', 'fields']
+        fields = ['id', 'name', 'code', 'description', 'active', 'fields']
 
 class ResponseSerializer(serializers.ModelSerializer):
     class Meta:
@@ -27,10 +27,3 @@ class ResponseDocumentSerializer(serializers.ModelSerializer):
     class Meta:
         model = ResponseDocument
         fields = '__all__'  # or maybe explicitly includes `field`
-
-class ReportFormTemplateSerializer(serializers.ModelSerializer):
-    form = FormSerializer()
-
-    class Meta:
-        model = ReportFormTemplate
-        fields = ['report_type', 'form']
