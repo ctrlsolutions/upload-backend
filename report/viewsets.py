@@ -3,8 +3,8 @@ import json
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, status
 from rest_framework.response import Response
-from .models import Form, Field, Response as ResponseModel, ResponseDocument, ReportFormTemplate, Report
-from .serializers import FormSerializer, FieldSerializer, ResponseSerializer, ResponseDocumentSerializer, ReportFormTemplateSerializer
+from .models import Form, Field, Response as ResponseModel, ResponseDocument, Report
+from .serializers import FormSerializer, FieldSerializer, ResponseSerializer, ResponseDocumentSerializer
 from rest_framework import permissions
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -86,7 +86,6 @@ class ReportViewSet(viewsets.ViewSet):
             return Response({'error': 'Invalid response format.'}, status=status.HTTP_400_BAD_REQUEST)
 
         form = get_object_or_404(Form, id=form_id)
-        form_template = get_object_or_404(ReportFormTemplate, form=form)
 
         form_response = ResponseModel.objects.create(
             form=form,
@@ -94,17 +93,17 @@ class ReportViewSet(viewsets.ViewSet):
             response=response_data
         )
 
+        title_field = Field.objects.filter(form=form, code='report_title').first()
+        title_value = response_data.get(str(title_field.id)) if title_field else form.name
+
         report = Report.objects.create(
-            title=form.title,
+            title=title_value,
             user=user,
-            report_type=form_template.report_type,
             department=department,
             college=college,
             form=form,
             response=form_response
         )
-
-        print(report)
 
         supporting_documents = [file for key, file in request.FILES.items() if key.startswith('document_')]
         for file in supporting_documents:
@@ -117,10 +116,12 @@ class ReportViewSet(viewsets.ViewSet):
             'message': 'Report submitted successfully.',
             'report_id': report.id
         }, status=status.HTTP_201_CREATED)
+    
+    ## TODO: frontend and backend
 
-class FormTemplateViewSet(viewsets.ViewSet):
+class FormViewSet(viewsets.ViewSet):
     permission_classes = [AllowAny]
     def list(self, request):
-        templates = ReportFormTemplate.objects.select_related('form').prefetch_related('form__fields').all()
-        serializer = ReportFormTemplateSerializer(templates, many=True)
+        forms = Form.objects.prefetch_related('fields').all()
+        serializer = FormSerializer(forms, many=True)
         return Response(serializer.data)

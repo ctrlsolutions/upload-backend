@@ -21,19 +21,21 @@ TYPES = [
 ]
 
 class Form(models.Model):
-    title = models.CharField(max_length=100)
+    name = models.CharField(max_length=100, unique=True)
+    code = models.SlugField(max_length=50, unique=True)
     description = models.TextField(blank=True, null=True)
-    created_on = models.DateField(auto_now_add=True)
-    active = models.BooleanField(default=True)  # To enable or disable form submission
+    active = models.BooleanField(default=True)
 
     creator = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True)
+    created_on = models.DateField(auto_now_add=True)
 
     def __str__(self):
-        return self.title
+        return self.name
 
 class Field(models.Model):
     form = models.ForeignKey(Form, on_delete=models.CASCADE, related_name='fields')
     label = models.CharField(max_length=100)
+    code = models.SlugField(max_length=50, blank=True, null=True, unique=False)
     type = models.CharField(max_length=20, choices=TYPES)
 
     # validation stuff
@@ -63,24 +65,12 @@ class ResponseDocument(models.Model):
     
     def __str__(self):
         return f"Document for response {self.response.id} - Field: {self.field.label if self.field else 'General'}"
-    
-class Report(models.Model):
-    class ReportType(models.TextChoices):
-        RESEARCH = 'RESEARCH', 'Research Report'
-        PUBLICATION = 'PUBLICATION', 'Publication Report'
-        PAPER_PRESENTATION = 'PAPER_PRESENTATION', 'Paper Presentation Report'
-        PATENT = 'PATENT', 'Patent Report'
-        OTHER_RESEARCH = 'OTHER_RESEARCH', 'Other Research Output Report'
-        TRAINING = 'TRAINING', 'Training Report'
-        EXTENSION = 'EXTENSION', 'Extension Report'
-        PARTNERSHIP = 'PARTNERSHIP', 'Partnership Report'
-        OTHERS = 'OTHERS', 'Others Report'
 
+class Report(models.Model):
     id = models.AutoField(primary_key=True)
     title = models.CharField(max_length=255)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="reports")
     created_on = models.DateTimeField(auto_now_add=True)
-    report_type = models.CharField(max_length=30, choices=ReportType.choices)
 
     department = models.ForeignKey(
         Department, on_delete=models.PROTECT, related_name="reports"
@@ -91,22 +81,12 @@ class Report(models.Model):
     )
 
     form = models.ForeignKey(
-        Form, on_delete=models.SET_NULL, null=True, blank=True, related_name='reports'
+        Form, on_delete=models.SET_NULL, null=True, blank=True, related_name='reports' # not that required, but might be useful in the future for versioning
     )
+
     response = models.OneToOneField(
-        Response, on_delete=models.SET_NULL, null=True, blank=True, related_name='report'
+        Response, on_delete=models.SET_NULL, null=True, blank=True, related_name='reports'
     )
 
     def __str__(self):
         return self.title
-    
-class ReportFormTemplate(models.Model):
-    report_type = models.CharField(
-        max_length=30,
-        choices=Report.ReportType.choices,
-        unique=True
-    )
-    form = models.ForeignKey(Form, on_delete=models.CASCADE, related_name='report_templates')
-
-    def __str__(self):
-        return f"{self.get_report_type_display()} Template"
