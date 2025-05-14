@@ -250,49 +250,15 @@
                             <th>Date Submitted</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="report-table-body">
+                        {% for item in items %}
                         <tr>
-                            <td>type</td>
-                            <td>title</td>
-                            <td>businos, alessandra</td>
-                            <td>09-16-2004</td>
+                            <td>{{ item.type }}</td>
+                            <td>{{ item.title }}</td>
+                            <td>{{ item.submitted_by }}</td>
+                            <td>{{ item.date }}</td>
                         </tr>
-                        <tr>
-                            <td>type</td>
-                            <td>title</td>
-                            <td>businos, alessandra</td>
-                            <td>09-16-2004</td>
-                        </tr>
-                        <tr>
-                            <td>type</td>
-                            <td>title</td>
-                            <td>businos, alessandra</td>
-                            <td>09-16-2004</td>
-                        </tr>
-                         <tr>
-                            <td>type</td>
-                            <td>title</td>
-                            <td>businos, alessandra</td>
-                            <td>09-16-2004</td>
-                        </tr>
-                         <tr>
-                            <td>type</td>
-                            <td>title</td>
-                            <td>businos, alessandra</td>
-                            <td>09-16-2004</td>
-                        </tr>
-                         <tr>
-                            <td>type</td>
-                            <td>title</td>
-                            <td>businos, alessandra</td>
-                            <td>09-16-2004</td>
-                        </tr>
-                        <tr class="total-row">
-                            <td>Total</td>
-                            <td>99999</td>
-                            <td></td>
-                            <td></td>
-                        </tr>
+                        {% endfor %}
                     </tbody>
                 </table>
             </div>
