@@ -127,6 +127,7 @@ REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
        "rest_framework.authentication.SessionAuthentication",
     ),
+    "EXCEPTION_HANDLER": "UPLoad.utils.custom_exception_handler",
 }
 
 SESSION_ENGINE = "django.contrib.sessions.backends.db"

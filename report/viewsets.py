@@ -8,6 +8,9 @@ from .serializers import FormSerializer, FieldSerializer, ResponseSerializer, Re
 from rest_framework import permissions
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
+from .utils.generate_pdf import generate_merged_pdf
+from django.http import FileResponse
+import os
     
 class ResponseViewSet(viewsets.ModelViewSet):
     serializer_class = ResponseSerializer
@@ -116,6 +119,44 @@ class ReportViewSet(viewsets.ViewSet):
             'message': 'Report submitted successfully.',
             'report_id': report.id
         }, status=status.HTTP_201_CREATED)
+    
+    @action(detail=False, methods=['post'], url_path='generate-pdf')
+    def generate_pdf(self, request):
+        data = request.data
+        scope = data.get('scope')
+        timeframe = data.get('timeframe')
+        items = []
+
+        ## BASIC SECTION
+        if scope == "self":
+            items = Report.objects.get(user=request.user)
+        elif scope == "department":
+            items = Report.objects.get(department=request.user.department)
+
+        sections = [
+            ("report/basic.html", {"scope": scope, "timeframe": timeframe}),
+        ]
+
+        ## REPORT LIST SECTION
+        if scope == "self":
+            items = Report.objects.get(user=request.user)
+        elif scope == "department":
+            items = Report.objects.get(department=request.user.department)
+
+        sections.append(("report/reportlist.html", {"items": items}))
+
+        merged_pdf = generate_merged_pdf(sections)
+
+        response = FileResponse(merged_pdf, content_type='application/pdf')
+        response['Content-Disposition'] = 'attachment; filename="full_report.pdf"'
+
+        # Clean up after sending
+        def cleanup(f):
+            f.close()
+            os.unlink(f.name)
+        response.close = lambda *args, **kwargs: cleanup(merged_pdf)
+
+        return response
     
     ## TODO: frontend and backend
 
