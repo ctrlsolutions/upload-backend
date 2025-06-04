@@ -1,1 +1,1 @@
-web: daphne -b 0.0.0.0 -p SPORT UPLoad.asgi:application
+web: daphne -b 0.0.0.0 -p $PORT UPLoad.asgi:application
