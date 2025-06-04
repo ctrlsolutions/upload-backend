@@ -1,10 +1,11 @@
 # views.py
 import json
+from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from .models import Form, Field, Response as ResponseModel, ResponseDocument, Report
-from .serializers import FormSerializer, ResponseSerializer, ResponseDocumentSerializer
+from .serializers import FormSerializer, FieldSerializer, ResponseSerializer, ResponseDocumentSerializer, ReportSerializer
 from rest_framework import permissions
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny
@@ -19,6 +20,7 @@ from PyPDF2 import PdfMerger
 import os
 from django.conf import settings
 from datetime import datetime
+from rest_framework.pagination import PageNumberPagination
 
 def generate_pdf_path(user, part):
     timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
@@ -35,6 +37,12 @@ def stream_and_cleanup(file_path, download_name):
     return FileResponse(file_iterator(), as_attachment=True, filename=download_name)
 
     
+
+class StandardResultsSetPagination(PageNumberPagination):
+    page_size = 10
+    page_size_query_param = 'page_size' 
+    max_page_size = 100
+
 class ResponseViewSet(viewsets.ModelViewSet):
     serializer_class = ResponseSerializer
     permission_classes = [permissions.AllowAny]
@@ -94,6 +102,10 @@ class ResponseDocumentViewSet(viewsets.ReadOnlyModelViewSet):
         return self.queryset
     
 class ReportViewSet(viewsets.ViewSet):
+    permission_classes = [IsAuthenticated]
+    pagination_class = StandardResultsSetPagination
+    serializer_class = ReportSerializer
+
     def create(self, request):
         user = request.user
 
@@ -143,12 +155,36 @@ class ReportViewSet(viewsets.ViewSet):
         }, status=status.HTTP_201_CREATED)
 
     def list(self, request):
-        # GET ALL REPORTS OF USER 
-        # CHECK USER ROLE
-        # IF DEP HEAD, GET ALL REPORTS OF DEPARTMENT
-        # IF COLLEGE DEAN, GET ALL REPORTS OF COLLEGE
-        # ...
-        pass
+        print("DEBUG: ReportViewSet.list - Entered method")
+        user = request.user
+        queryset = Report.objects.none()
+        user_role = getattr(user, 'role', None)
+        print(f"DEBUG: ReportViewSet.list - User role: {user_role}")
+
+        if user_role == 'COLLEGE DEAN' and hasattr(user, 'college') and user.college:
+            queryset = Report.objects.filter(college=user.college)
+        elif user_role == 'DEP HEAD' and hasattr(user, 'department') and user.department:
+            queryset = Report.objects.filter(department=user.department)
+        else:
+            queryset = Report.objects.filter(user=user)
+
+        # if self.pagination_class:
+        #     page = self.paginate_queryset(queryset)
+        #     if page is not None:
+        #         serializer = self.get_serializer(page, many=True) # Use get_serializer for consistency
+        #         return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True) # Use get_serializer
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    # It's good practice to define get_serializer if you've set serializer_class
+    def get_serializer(self, *args, **kwargs):
+        kwargs.setdefault('context', self.get_serializer_context())
+        return self.serializer_class(*args, **kwargs)
+
+    def get_serializer_context(self):
+        return {'request': self.request, 'format': self.format_kwarg, 'view': self}
+
         
     
     @action(detail=False, methods=['post'])
