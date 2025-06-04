@@ -44,13 +44,16 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'report',
     'user',
+    'university',
     'common',
+    'channels',
 ]
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -59,6 +62,8 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'UPLoad.urls'
+
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 TEMPLATES = [
     {
@@ -77,6 +82,23 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'UPLoad.wsgi.application'
+ASGI_APPLICATION = 'UPLoad.asgi.application'
+
+# CHANNEL_LAYERS = {
+#     'default': {
+#         'BACKEND': 'channels_redis.core.RedisChannelLayer',
+#         'CONFIG': {
+#             'hosts': [('127.0.0.1', 6379)],
+#         },
+#     },
+# }   
+
+#### FOR DEV ONLY
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels.layers.InMemoryChannelLayer',  # for dev only!
+    },
+}
 
 CORS_ALLOWED_ORIGINS = config("CORS_ALLOWED_ORIGINS").split(",")
 CSRF_TRUSTED_ORIGINS = config("CORS_ALLOWED_ORIGINS").split(",")
@@ -127,7 +149,7 @@ REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
        "rest_framework.authentication.SessionAuthentication",
     ),
-    "EXCEPTION_HANDLER": "UPLoad.utils.custom_exception_handler",
+    "EXCEPTION_HANDLER": "common.utils.custom_exception_handler",
 }
 
 SESSION_ENGINE = "django.contrib.sessions.backends.db"
