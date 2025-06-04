@@ -31,10 +31,10 @@ def generate_report(context, filename="report-list.pdf"):
     elements = []
 
     # Logo
-    logo = Image("HEADER.png", width=86, height=26)  # Adjust size as needed
-    logo.hAlign = 'CENTER'  # or 'CENTER' or 'RIGHT'
-    elements.append(logo)
-    elements.append(Spacer(1, 32))
+    # logo = Image("HEADER.png", width=86, height=26)  # Adjust size as needed
+    # logo.hAlign = 'CENTER'  # or 'CENTER' or 'RIGHT'
+    # elements.append(logo)
+    # elements.append(Spacer(1, 32))
 
     # Title
     title = Paragraph("""<font color="#800000" size="12"><b>Comprehensive List of Submitted Reports</b></font>""", styles["Title"])

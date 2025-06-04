@@ -1,19 +1,12 @@
 from reportlab.lib.pagesizes import A4
 from reportlab.lib import colors
-from reportlab.pdfgen import canvas
 from reportlab.lib.units import inch, mm
 from reportlab.platypus import Table, TableStyle, SimpleDocTemplate, Paragraph, Spacer, Flowable
 from reportlab.lib.styles import getSampleStyleSheet
 from datetime import datetime
 
-from reportlab.graphics.charts.piecharts import Pie
-from reportlab.lib.colors import PCMYKColor, HexColor
-from reportlab.graphics.charts.legends import Legend
-from reportlab.graphics.shapes import Drawing, _DrawingEditorMixin, String
-from reportlab.lib.validators import Auto
-from reportlab.lib.formatters import DecimalFormatter
-from reportlab.pdfbase.ttfonts import TTFont
-from reportlab.pdfbase import pdfmetrics
+from reportlab.lib.colors import HexColor
+from reportlab.graphics.shapes import Drawing, _DrawingEditorMixin
 
 from reportlab.graphics.charts.lineplots import LinePlot
 from reportlab.graphics.widgets.markers import makeMarker
@@ -22,8 +15,13 @@ from reportlab.lib.corp import cm
 from reportlab.platypus import HRFlowable
 from reportlab.platypus import Image
 
-from datetime import datetime, timedelta
+from datetime import datetime
 from dateutil.relativedelta import relativedelta
+
+# from django.conf import settings
+# import os
+
+# IMAGE_PATH = os.path.join(settings.STATIC_ROOT, "images", "HEADER.png")
 
 def calculate_timeframe(timeframe_str, generated_date_str):
     """Convert timeframe like '6 months' to '01-01-2025 - 05-19-2025 (6 months)'"""
@@ -190,10 +188,10 @@ def generate_report(context, filename="basic_new.pdf"):
     elements = []
 
     # Logo
-    logo = Image("HEADER.png", width=86, height=26)  # Adjust size as needed
-    logo.hAlign = 'CENTER'  # or 'CENTER' or 'RIGHT'
-    elements.append(logo)
-    elements.append(Spacer(1, 12))
+    # logo = Image(IMAGE_PATH, width=86, height=26)  # Adjust size as needed
+    # logo.hAlign = 'CENTER'  # or 'CENTER' or 'RIGHT'
+    # elements.append(logo)
+    # elements.append(Spacer(1, 12))
 
     # Header
     # First row table
@@ -321,13 +319,6 @@ def generate_report(context, filename="basic_new.pdf"):
     
     # 3. Calculate percentage (capped at 100%)
     progress_percent = min(100, (current_submissions / TARGET_SUBMISSIONS) * 100)
-    
-    # Add progress bars section title
-    # elements.append(Paragraph(
-    #     """<font color="#800000"><b>Report Completion Progress</b></font>""",
-    #     styles["Normal"]
-    # ))
-    # elements.append(Spacer(1, 12))
 
     # Define targets for each report type
     REPORT_TARGETS = {
@@ -373,11 +364,6 @@ def generate_report(context, filename="basic_new.pdf"):
 
     elements.append(Spacer(1, 48))  # Additional space before line chart
 
-    # elements.append(Paragraph(
-    #     """<font color="#800000"><b>Timeline</b></font>""",
-    #     styles["Normal"]
-    # ))
-    # elements.append(Spacer(1, 28))
 
     # Line Chart
     elements.append(LineChart(context=context))
@@ -418,27 +404,6 @@ def generate_report(context, filename="basic_new.pdf"):
     elements.append(report_table)
     elements.append(Spacer(1, 24))
 
-    # Summary Stats - only show for Department/College/University scope
-    # if context['scope'].lower() in ['department', 'college', 'university']:
-    #     population = context.get("faculty_population", 0)
-    #     reports_per_faculty = round(total / population, 2) if population else "N/A"
-    #     summary_data = [
-    #         ["Total Faculty Population", "Reports per Faculty Member"],
-    #         [str(population), str(reports_per_faculty)]
-    #     ]
-    #     summary_table = Table(summary_data, colWidths=[210, 210], rowHeights=[15, 15])
-    #     summary_table.setStyle(TableStyle([
-    #         ("GRID", (0, 0), (-1, -1), 1, colors.white),
-    #         ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
-    #         ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#751113")),
-    #         ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
-    #         ("ALIGN", (1, 1), (-1, -1), "LEFT"),
-    #         ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
-    #         ("FONTSIZE", (0, 0), (-1, -1), 8),
-    #         ("FONTSIZE", (0, 0), (-1, 0), 8),
-    #     ]))
-    #     elements.append(summary_table)
-
     doc.build(elements)
     print(f"✅ PDF generated: {filename}")
 
@@ -474,6 +439,3 @@ context = {
         ("2025-06-15", 28),
     ]
 }
-
-generate_report(context)
-

@@ -4,22 +4,42 @@ from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from .models import Form, Field, Response as ResponseModel, ResponseDocument, Report
-from .serializers import FormSerializer, FieldSerializer, ResponseSerializer, ResponseDocumentSerializer
+from .serializers import FormSerializer, ResponseSerializer, ResponseDocumentSerializer
 from rest_framework import permissions
 from rest_framework.decorators import action
-from rest_framework.permissions import AllowAny, IsAuthenticated
-from .utils.generate_pdf import generate_merged_pdf
+from rest_framework.permissions import AllowAny
+from .utils.basic_new import generate_report
+from .utils.reportlist import generate_report as generate_reportlist
 from django.http import FileResponse
-import os
 from django.db.models import Count
+from django.utils import timezone
+import tempfile, os
+from PyPDF2 import PdfMerger
+
+import os
+from django.conf import settings
 from datetime import datetime
+
+def generate_pdf_path(user, part):
+    timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+    filename = f"{user.username}-{timestamp}-part{part}.pdf"
+    return os.path.join(settings.MEDIA_ROOT, filename)
+
+
+def stream_and_cleanup(file_path, download_name):
+    def file_iterator():
+        with open(file_path, 'rb') as f:
+            yield from f
+        os.remove(file_path)
+
+    return FileResponse(file_iterator(), as_attachment=True, filename=download_name)
+
     
 class ResponseViewSet(viewsets.ModelViewSet):
     serializer_class = ResponseSerializer
     permission_classes = [permissions.AllowAny]
 
     def get_queryset(self):
-        # You can filter based on query params, like form_id or user_id, if needed
         form_id = self.request.query_params.get('form_id', None)
         if form_id:
             return ResponseModel.objects.filter(form_id=form_id)
@@ -135,36 +155,138 @@ class ReportViewSet(viewsets.ViewSet):
     def generate(self, request):
         user = request.user
         data = request.data
-        scope = data.get('scope')
-        timeframe = data.get('timeframe')
-        print(data)
-        items = []
+        scope = data.get("scope")
+        timeframe = data.get("timeframe")  # handle this as needed
+        reports = Report.objects.none()
 
         ## BASIC SECTION
-        if scope == "self":
-            report_summary = (Report.objects.filter(user=user).values('form__name').annotate(number_of_submissions=Count('id')).order_by('form__name'))
-            items = [{'type': r['form__name'] or 'Unspecified', 'number_of_submissions': r['number_of_submissions']} for r in report_summary]
-        elif scope == "department":
-            items = Report.objects.get(department=request.user.department)
-            ## TODO: add college and department
+        if scope == "FA":
+            reports = Report.objects.filter(user=user)
+        elif scope == "DH":
+            reports = Report.objects.filter(department=user.department)
+        elif scope == "CD":
+            reports = Report.objects.filter(college=user.college)
+        elif scope == "CH":
+            reports = Report.objects.all()
 
-        sections = [
-            ("report/basic.html", {"scope": scope, "timeframe": timeframe, "items": items, "generated_by": f'{user.first_name} {user.last_name}', "generated_on": datetime.now().strftime('%B %d, %Y')}),
+        items_qs = (
+            reports.values("form__name")
+            .annotate(number_of_submissions=Count("id"))
+            .order_by("form__name")
+        )
+
+        SCOPE_LABELS = {
+            "FA": "Self",
+            "DH": "Department",
+            "CD": "College",
+            "CH": "University",
+        }
+
+        TIMEFRAME_LABELS = {
+            "SM": "6 months",
+            "YR": "1 year",
+        }
+
+
+        items = [
+            {"type": entry["form__name"], "number_of_submissions": entry["number_of_submissions"]}
+            for entry in items_qs if entry["form__name"]  # filter out possible nulls
+        ]
+        submissions = reports.order_by("created_on").values_list("created_on", flat=True)
+        from collections import Counter
+        date_counts = Counter([dt.date().isoformat() for dt in submissions])
+
+        submissions_data = sorted(date_counts.items())
+
+        context = {
+            "scope": SCOPE_LABELS.get(scope, scope),
+            "department": user.department.name if user.department else "",
+            "college": user.college.name if user.college else "",
+            "university": "UP Cebu",  # or fetch dynamically
+            "timeframe": TIMEFRAME_LABELS.get(timeframe, timeframe),
+            "generated_by": f"{user.first_name} {user.middle_name[0] + '.' if user.middle_name else ''} {user.last_name}",
+            "generated_on": timezone.now().strftime('%m-%d-%Y'),
+            "items": items,
+            "submissions": submissions_data,
+        }
+
+        detailed_submissions = [
+            {
+                "type": report.form.name if report.form else "Unknown",
+                "title": report.title,
+                "submitted_by": f"{report.user.first_name} {report.user.last_name}",
+                "date_submitted": report.created_on.strftime('%Y-%m-%d')
+            }
+            for report in reports.select_related("user", "form")
         ]
 
-        ## REPORT LIST SECTION
-        if scope == "self":
-            items = Report.objects.filter(user=request.user)
-            print(items)
-        elif scope == "department":
-            items = Report.objects.get(department=request.user.department)
+        con = {
+            "scope": SCOPE_LABELS.get(scope, scope),
+            "department": user.department.name if user.department else "",
+            "college": user.college.name if user.college else "",
+            "university": "UP Cebu",  # or fetch dynamically
+            "timeframe": TIMEFRAME_LABELS.get(timeframe, timeframe),
+            "generated_by": f"{user.first_name} {user.middle_name[0] + '.' if user.middle_name else ''} {user.last_name}",
+            "generated_on": timezone.now().strftime('%m-%d-%Y'),
+            "detailed_submissions": detailed_submissions
+        }
 
-        sections.append(("report/reportlist.html", {"items": items}))
 
-        merged_pdf = generate_merged_pdf(sections)
+        print(context)
 
-        response = FileResponse(merged_pdf, content_type='application/pdf')
-        response['Content-Disposition'] = 'attachment; filename="full_report.pdf"'
+        timestamp = timezone.now().strftime("%Y%m%d-%H%M%S")
+        base_name = f"{user.username}-{timestamp}"
+        
+        pdf1_path = generate_pdf_path(user, 1)
+        # generate_report(context, pdf1_path)
+
+        pdf2_path = generate_pdf_path(user, 2)
+        # generate_reportlist(con, pdf2_path)
+        
+        final_pdf_path = generate_pdf_path(user, 3)
+
+        try:
+        # generate PDFs (make sure these functions close the file internally)
+            generate_report(context, pdf1_path)
+            generate_reportlist(con, pdf2_path)
+
+            # combine them
+            merger = PdfMerger()
+            with open(pdf1_path, 'rb') as f1, open(pdf2_path, 'rb') as f2:
+                merger.append(f1)
+                merger.append(f2)
+                with open(final_pdf_path, 'wb') as fout:
+                    merger.write(fout)
+            merger.close()
+
+            # Clean up part1 and part2 safely
+            os.remove(pdf1_path)
+            os.remove(pdf2_path)
+
+            return stream_and_cleanup(final_pdf_path, f"{base_name}.pdf")
+
+        except Exception as e:
+            # Optional: clean up if something goes wrong
+            for path in [pdf1_path, pdf2_path, final_pdf_path]:
+                if os.path.exists(path):
+                    try:
+                        os.remove(path)
+                    except Exception:
+                        pass
+            raise e
+        # ## REPORT LIST SECTION
+        # if scope == "self":
+        #     items = Report.objects.filter(user=request.user)
+        #     print(items)
+        # elif scope == "department":
+        #     items = Report.objects.get(department=request.user.department)
+
+        # sections.append(("report/reportlist.html", {"items": items}))
+
+        # merged_pdf = generate_merged_pdf(sections)
+
+        # response = FileResponse(merged_pdf, content_type='application/pdf')
+        # response['Content-Disposition'] = 'attachment; filename="full_report.pdf"'
 
         # Clean up after sending
         # def cleanup(f):
