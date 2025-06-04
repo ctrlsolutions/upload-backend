@@ -8,7 +8,7 @@ from rest_framework import serializers
 
 from university.serializers import DepartmentSerializer, CollegeSerializer
 
-from .models import CustomUser
+from .models import CustomUser, Role
 
 
 UP_EMAIL_REGEX = re.compile(r'^[\w.+-]+@up\.edu\.ph$')
@@ -95,10 +95,16 @@ class LogInSerializer(serializers.Serializer):
             "user": user,
         }
     
+class RoleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Role
+        fields = ['role_id', 'code', 'name']
+
+    
 class UserProfileSerializer(serializers.ModelSerializer):
     department = DepartmentSerializer(read_only=True)
     college = CollegeSerializer(read_only=True)
-    role = serializers.CharField(source='role.name')
+    role = RoleSerializer(read_only=True)
     # profile_picture = serializers.ImageField(read_only=True)  # optional, if added later
 
     class Meta:
