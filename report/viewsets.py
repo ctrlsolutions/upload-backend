@@ -11,6 +11,8 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from .utils.generate_pdf import generate_merged_pdf
 from django.http import FileResponse
 import os
+from django.db.models import Count
+from datetime import datetime
     
 class ResponseViewSet(viewsets.ModelViewSet):
     serializer_class = ResponseSerializer
@@ -119,27 +121,41 @@ class ReportViewSet(viewsets.ViewSet):
             'message': 'Report submitted successfully.',
             'report_id': report.id
         }, status=status.HTTP_201_CREATED)
+
+    def list(self, request):
+        # GET ALL REPORTS OF USER 
+        # CHECK USER ROLE
+        # IF DEP HEAD, GET ALL REPORTS OF DEPARTMENT
+        # IF COLLEGE DEAN, GET ALL REPORTS OF COLLEGE
+        # ...
+        pass
+        
     
-    @action(detail=False, methods=['post'], url_path='generate-pdf')
-    def generate_pdf(self, request):
+    @action(detail=False, methods=['post'])
+    def generate(self, request):
+        user = request.user
         data = request.data
         scope = data.get('scope')
         timeframe = data.get('timeframe')
+        print(data)
         items = []
 
         ## BASIC SECTION
         if scope == "self":
-            items = Report.objects.get(user=request.user)
+            report_summary = (Report.objects.filter(user=user).values('form__name').annotate(number_of_submissions=Count('id')).order_by('form__name'))
+            items = [{'type': r['form__name'] or 'Unspecified', 'number_of_submissions': r['number_of_submissions']} for r in report_summary]
         elif scope == "department":
             items = Report.objects.get(department=request.user.department)
+            ## TODO: add college and department
 
         sections = [
-            ("report/basic.html", {"scope": scope, "timeframe": timeframe}),
+            ("report/basic.html", {"scope": scope, "timeframe": timeframe, "items": items, "generated_by": f'{user.first_name} {user.last_name}', "generated_on": datetime.now().strftime('%B %d, %Y')}),
         ]
 
         ## REPORT LIST SECTION
         if scope == "self":
-            items = Report.objects.get(user=request.user)
+            items = Report.objects.filter(user=request.user)
+            print(items)
         elif scope == "department":
             items = Report.objects.get(department=request.user.department)
 
@@ -151,10 +167,10 @@ class ReportViewSet(viewsets.ViewSet):
         response['Content-Disposition'] = 'attachment; filename="full_report.pdf"'
 
         # Clean up after sending
-        def cleanup(f):
-            f.close()
-            os.unlink(f.name)
-        response.close = lambda *args, **kwargs: cleanup(merged_pdf)
+        # def cleanup(f):
+        #     f.close()
+        #     os.unlink(f.name)
+        # response.close = lambda *args, **kwargs: cleanup(merged_pdf)
 
         return response
     
