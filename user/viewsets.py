@@ -183,8 +183,7 @@ class ProfileViewSet(viewsets.ViewSet):
     def me(self, request):
         """Returns the user profile [DONE]"""
         user_data = UserProfileSerializer(request.user).data
-        api_response(
-            success=True,
+        return api_response(
             message="User profile fetched successfully!",
             data={"user": user_data},
         )
@@ -198,13 +197,11 @@ class ProfileViewSet(viewsets.ViewSet):
         if serializer.is_valid():
             serializer.save()
             return api_response(
-                success=True,
                 message="User profile fetched successfully!",
                 data={"user": serializer.data},
             )
 
         return api_response(
-            success=False,
             message="Profile update failed.",
             status_code=status.HTTP_400_BAD_REQUEST,
         )
