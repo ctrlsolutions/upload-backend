@@ -1,6 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 
+from university.models import College, Department
+
 class CustomUserManager(BaseUserManager):
     def create_user(self, email, password, **kwargs):
         if not email:
@@ -52,33 +54,15 @@ class Role(models.Model):
     def __str__(self):
         return self.name
 
-
 class RolePermission(models.Model):
     role = models.ForeignKey(Role, on_delete=models.CASCADE)
     permission = models.ForeignKey(Permission, on_delete=models.CASCADE)
-class College(models.Model):
-    college_id = models.AutoField(primary_key=True)
-    code = models.CharField(max_length=10, unique=True)
-    name = models.CharField(max_length=255)
-
-    def __str__(self):
-        return f"{self.name} ({self.code})"
-
-class Department(models.Model):
-    department_id = models.AutoField(primary_key=True)
-    code = models.CharField(max_length=10, unique=True)
-    name = models.CharField(max_length=255)
-    college = models.ForeignKey(College, on_delete=models.CASCADE, related_name="departments")
-
-    def __str__(self):
-        return f"{self.name} ({self.college.code})"
 
 class CustomUser(AbstractBaseUser, PermissionsMixin):
     SEX_CHOICES = [
         ('M', 'Male'),
         ('F', 'Female'),
-        ('O', 'Other'),
-        ('P', 'Prefer not to say')
+        ('O', 'Other/Prefer not to say'),
     ]
 
     user_id = models.AutoField(primary_key=True)
